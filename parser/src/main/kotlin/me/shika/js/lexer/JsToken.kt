@@ -1,7 +1,7 @@
 package me.shika.js.lexer
 
-import me.shika.js.elements.JsLanguage
 import com.intellij.psi.tree.IElementType
+import me.shika.js.elements.JsLanguage
 
 class JsToken(debugName: String) : IElementType(debugName, JsLanguage) {
     companion object {
@@ -52,6 +52,6 @@ class JsToken(debugName: String) : IElementType(debugName, JsLanguage) {
 
         // Other
         @JvmField
-        val EOL = JsToken("EOL")
+        val WHITESPACE = JsToken("WHITESPACE")
     }
 }

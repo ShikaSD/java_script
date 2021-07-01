@@ -1,38 +1,38 @@
 package me.shika.js.parser
 
-import me.shika.js.lexer.JsToken.Companion.COMMA
-import me.shika.js.lexer.JsToken.Companion.FUNCTION_KEYWORD
-import me.shika.js.lexer.JsToken.Companion.IDENTIFIER
-import me.shika.js.lexer.JsToken.Companion.LBRACE
-import me.shika.js.lexer.JsToken.Companion.EOL
-import me.shika.js.lexer.JsToken.Companion.LPAR
-import me.shika.js.lexer.JsToken.Companion.RBRACE
-import me.shika.js.lexer.JsToken.Companion.RPAR
 import com.intellij.lang.ASTNode
 import com.intellij.lang.PsiBuilder
 import com.intellij.lang.PsiParser
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
 import me.shika.js.elements.JsElementType
-import me.shika.js.elements.JsElementType.ARGUMENT
-import me.shika.js.elements.JsElementType.ARGUMENT_LIST
-import me.shika.js.elements.JsElementType.BLOCK
-import me.shika.js.elements.JsElementType.BOOLEAN_CONSTANT
-import me.shika.js.elements.JsElementType.FILE_TYPE
-import me.shika.js.elements.JsElementType.FUNCTION
-import me.shika.js.elements.JsElementType.NUMBER_CONSTANT
-import me.shika.js.elements.JsElementType.STRING_CONSTANT
-import me.shika.js.elements.JsElementType.PARAMETER
-import me.shika.js.elements.JsElementType.PARAMETER_LIST
-import me.shika.js.elements.JsElementType.REFERENCE
-import me.shika.js.elements.JsElementType.VARIABLE
+import me.shika.js.elements.JsElementType.Companion.ARGUMENT
+import me.shika.js.elements.JsElementType.Companion.ARGUMENT_LIST
+import me.shika.js.elements.JsElementType.Companion.BLOCK
+import me.shika.js.elements.JsElementType.Companion.BOOLEAN_CONSTANT
+import me.shika.js.elements.JsElementType.Companion.FILE
+import me.shika.js.elements.JsElementType.Companion.FUNCTION
+import me.shika.js.elements.JsElementType.Companion.NUMBER_CONSTANT
+import me.shika.js.elements.JsElementType.Companion.PARAMETER
+import me.shika.js.elements.JsElementType.Companion.PARAMETER_LIST
+import me.shika.js.elements.JsElementType.Companion.REFERENCE
+import me.shika.js.elements.JsElementType.Companion.STRING_CONSTANT
+import me.shika.js.elements.JsElementType.Companion.VARIABLE
 import me.shika.js.lexer.JsToken
 import me.shika.js.lexer.JsToken.Companion.BOOLEAN_LITERAL
+import me.shika.js.lexer.JsToken.Companion.COMMA
 import me.shika.js.lexer.JsToken.Companion.EQ
+import me.shika.js.lexer.JsToken.Companion.FUNCTION_KEYWORD
+import me.shika.js.lexer.JsToken.Companion.IDENTIFIER
+import me.shika.js.lexer.JsToken.Companion.LBRACE
+import me.shika.js.lexer.JsToken.Companion.LPAR
 import me.shika.js.lexer.JsToken.Companion.NUMBER_LITERAL
+import me.shika.js.lexer.JsToken.Companion.RBRACE
+import me.shika.js.lexer.JsToken.Companion.RPAR
 import me.shika.js.lexer.JsToken.Companion.SEMICOLON
 import me.shika.js.lexer.JsToken.Companion.STRING_LITERAL
 import me.shika.js.lexer.JsToken.Companion.VAR_KEYWORD
+import me.shika.js.lexer.JsToken.Companion.WHITESPACE
 
 class JsParser : PsiParser {
     override fun parse(elementType: IElementType, builder: PsiBuilder): ASTNode =
@@ -51,7 +51,7 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
             parseStatement()
         }
 
-        fileMarker.done(FILE_TYPE)
+        fileMarker.done(FILE)
 
         return psiBuilder.treeBuilt
     }
@@ -62,7 +62,7 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
         if (parseExpression()) {
             // todo
         } else if (!parseDeclaration()) {
-            error("Failed to parse statement", recovery = TokenSet.create(EOL, SEMICOLON))
+            error("Failed to parse statement", recovery = TokenSet.create(WHITESPACE, SEMICOLON))
         }
 
         skipSpace()
@@ -111,7 +111,13 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
 
         if (at(EQ)) {
             advance()
-            parseAtomicExpression()
+            val argumentMark = psiBuilder.mark()
+            val result = parseAtomicExpression()
+            if (!result) {
+                argumentMark.error("Expected variable value")
+            } else {
+                argumentMark.done(ARGUMENT)
+            }
         }
 
         if (at(SEMICOLON)) {
@@ -187,8 +193,14 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
 
         while (!at(RPAR)) {
             val argumentMark = psiBuilder.mark()
-            parseAtomicExpression()
-            argumentMark.done(ARGUMENT)
+            val result = parseAtomicExpression()
+
+            if (result) {
+                argumentMark.done(ARGUMENT)
+            } else {
+                argumentMark.error("Expected argument")
+                advance()
+            }
 
             if (at(COMMA)) {
                 advance()
@@ -260,12 +272,12 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
     private fun current(): IElementType? = psiBuilder.tokenType
     private fun at(type: IElementType): Boolean = current() == type
     private fun advance() {
-        skipSpace()
         next()
+        skipSpace()
     }
 
     private fun skipSpace() {
-        while (at(EOL)) next()
+        while (at(WHITESPACE)) next()
     }
 
     private fun next() {

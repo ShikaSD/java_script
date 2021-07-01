@@ -1,13 +1,9 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.net.URI
 
 plugins {
     kotlin("jvm")
     id("org.xbib.gradle.plugin.jflex") version "1.4.0"
 }
-
-group = "me.shika"
-version = "1.0-SNAPSHOT"
 
 val zipped by configurations.creating {
     isCanBeResolved = true
@@ -15,7 +11,6 @@ val zipped by configurations.creating {
 }
 
 repositories {
-    mavenCentral()
     maven(url = "https://www.jetbrains.com/intellij-repository/releases/")
     maven(url = "https://cache-redirector.jetbrains.com/intellij-dependencies")
 }

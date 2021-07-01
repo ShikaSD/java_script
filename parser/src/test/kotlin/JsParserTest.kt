@@ -1,34 +1,15 @@
-import com.intellij.core.CoreApplicationEnvironment
-import com.intellij.mock.MockProject
-import com.intellij.openapi.Disposable
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
-import com.intellij.psi.SingleRootFileViewProvider
-import com.intellij.psi.impl.PsiManagerImpl
-import com.intellij.testFramework.LightVirtualFile
-import me.shika.js.elements.JsFile
-import me.shika.js.elements.JsLanguage
-import me.shika.js.parser.JsParserDefinition
+import me.shika.js.parseFile
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-class JsLexerTest {
-    class TestEnv : CoreApplicationEnvironment({})
-
+class JsParserTest {
     @Test
     fun testLexer() {
-        val parentDisposable = Disposable{}
-        val environment = TestEnv()
-        val project = MockProject(null, parentDisposable)
+        val fileText = javaClass.getResourceAsStream("Test.js")!!
+        val jsFile = parseFile("Test.js", fileText)
 
-        environment.registerFileType(JsFile.Type, ".js")
-        environment.registerParserDefinition(JsParserDefinition())
-
-        val psiManager = PsiManagerImpl(project)
-
-        val fileText = javaClass.getResourceAsStream("Test.js").reader().use { it.readText() }
-        val fileViewProvider = SingleRootFileViewProvider(psiManager, LightVirtualFile("Test.js", JsLanguage, fileText))
-        val jsFile = JsFile(fileViewProvider)
         val result = StringBuilder()
         jsFile.accept(object : PsiElementVisitor() {
             var depth = 0
@@ -50,26 +31,41 @@ class JsLexerTest {
             JsFile
               ASTWrapperPsiElement(FUNCTION)
                 PsiElement(FUNCTION_KEYWORD)
+                PsiElement(WHITESPACE)
                 PsiElement(IDENTIFIER)
                 ASTWrapperPsiElement(PARAMETER_LIST)
                   PsiElement(()
                   ASTWrapperPsiElement(PARAMETER)
                     PsiElement(IDENTIFIER)
                   PsiElement(,)
+                  PsiElement(WHITESPACE)
                   ASTWrapperPsiElement(PARAMETER)
                     PsiElement(IDENTIFIER)
                   PsiElement())
+                  PsiElement(WHITESPACE)
                 ASTWrapperPsiElement(BLOCK)
                   PsiElement({)
-                  PsiElement(EOL)
+                  PsiElement(WHITESPACE)
+                  PsiElement(WHITESPACE)
+                  PsiElement(WHITESPACE)
+                  PsiElement(WHITESPACE)
+                  PsiElement(WHITESPACE)
                   ASTWrapperPsiElement(VARIABLE)
                     PsiElement(VAR_KEYWORD)
+                    PsiElement(WHITESPACE)
                     PsiElement(IDENTIFIER)
+                    PsiElement(WHITESPACE)
                     PsiElement(=)
-                    ASTWrapperPsiElement(STRING_CONSTANT)
-                      PsiElement(STRING_LITERAL)
+                    PsiElement(WHITESPACE)
+                    ASTWrapperPsiElement(ARGUMENT)
+                      ASTWrapperPsiElement(STRING_CONSTANT)
+                        PsiElement(STRING_LITERAL)
                     PsiElement(;)
-                  PsiElement(EOL)
+                    PsiElement(WHITESPACE)
+                    PsiElement(WHITESPACE)
+                    PsiElement(WHITESPACE)
+                    PsiElement(WHITESPACE)
+                    PsiElement(WHITESPACE)
                   ASTWrapperPsiElement(CALL)
                     ASTWrapperPsiElement(REFERENCE)
                       PsiElement(IDENTIFIER)
@@ -79,20 +75,35 @@ class JsLexerTest {
                         ASTWrapperPsiElement(REFERENCE)
                           PsiElement(IDENTIFIER)
                       PsiElement())
-                  PsiElement(EOL)
+                      PsiElement(WHITESPACE)
                   PsiElement(})
-              PsiElement(EOL)
-              PsiElement(EOL)
+                  PsiElement(WHITESPACE)
+                  PsiElement(WHITESPACE)
               ASTWrapperPsiElement(CALL)
                 ASTWrapperPsiElement(REFERENCE)
                   PsiElement(IDENTIFIER)
                 ASTWrapperPsiElement(ARGUMENT_LIST)
                   PsiElement(()
                   ASTWrapperPsiElement(ARGUMENT)
+                    ASTWrapperPsiElement(NUMBER_CONSTANT)
+                      PsiElement(NUMBER_LITERAL)
+                  PsiElement(,)
+                  PsiElement(WHITESPACE)
+                  ASTWrapperPsiElement(ARGUMENT)
+                    ASTWrapperPsiElement(STRING_CONSTANT)
+                      PsiElement(STRING_LITERAL)
+                  PsiElement(,)
+                  PsiElement(WHITESPACE)
+                  ASTWrapperPsiElement(ARGUMENT)
+                    ASTWrapperPsiElement(STRING_CONSTANT)
+                      PsiElement(STRING_LITERAL)
+                  PsiElement(,)
+                  PsiElement(WHITESPACE)
+                  ASTWrapperPsiElement(ARGUMENT)
                     ASTWrapperPsiElement(STRING_CONSTANT)
                       PsiElement(STRING_LITERAL)
                   PsiElement())
-              PsiElement(EOL)
+                  PsiElement(WHITESPACE)
         """.trimIndent(), result.toString())
     }
 }

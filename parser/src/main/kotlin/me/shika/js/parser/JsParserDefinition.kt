@@ -20,7 +20,7 @@ class JsParserDefinition : ParserDefinition {
 
     override fun createParser(project: Project): PsiParser = JsParser()
 
-    override fun getFileNodeType(): IFileElementType = JsElementType.FILE_TYPE
+    override fun getFileNodeType(): IFileElementType = JsElementType.FILE
 
     override fun getCommentTokens(): TokenSet = TokenSet.EMPTY
 

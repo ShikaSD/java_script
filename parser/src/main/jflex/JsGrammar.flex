@@ -2,6 +2,7 @@ package me.shika.js.lexer;
 
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
+import java.lang.StringBuilder;
 import java.io.Reader;
 
 %%
@@ -17,6 +18,8 @@ import java.io.Reader;
 %scanerror JsLexerException
 
 %{
+    StringBuilder string = new StringBuilder();
+
     public void reset(Reader buffer, int start, int end, int initialState) {
         yyreset(buffer);
         zzCurrentPos = zzMarkedPos = zzStartRead = start;
@@ -35,6 +38,8 @@ import java.io.Reader;
     return;
 %eof}
 
+%state STRING
+
 LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
 WhiteSpace  = [ \t\f]
@@ -42,43 +47,47 @@ WhiteSpace  = [ \t\f]
 Identifier = [:jletter:][:jletterdigit:]*
 Digit = [0-9]
 NumberLiteral = {Digit}+
-StringLiteral = \"{InputCharacter}+\"
+DoubleQuote = [\"]
 
 %state STRING
 
 %%
 
 /* keywords */
-"function" { return JsToken.FUNCTION_KEYWORD; }
-"var"      { return JsToken.VAR_KEYWORD; }
-"if"       { return JsToken.IF_KEYWORD; }
-"else"     { return JsToken.ELSE_KEYWORD; }
-"return"   { return JsToken.RETURN_KEYWORD; }
+<YYINITIAL> "function" { return JsToken.FUNCTION_KEYWORD; }
+<YYINITIAL> "var"      { return JsToken.VAR_KEYWORD; }
+<YYINITIAL> "if"       { return JsToken.IF_KEYWORD; }
+<YYINITIAL> "else"     { return JsToken.ELSE_KEYWORD; }
+<YYINITIAL> "return"   { return JsToken.RETURN_KEYWORD; }
 
 /* operators */
-"=="       { return JsToken.EQEQ; }
+<YYINITIAL> "=="       { return JsToken.EQEQ; }
 
 /* punctuation */
-"("        { return JsToken.LPAR; }
-")"        { return JsToken.RPAR; }
-"{"        { return JsToken.LBRACE; }
-"}"        { return JsToken.RBRACE; }
-"="        { return JsToken.EQ; }
-";"        { return JsToken.SEMICOLON; }
-","        { return JsToken.COMMA; }
-"."        { return JsToken.DOT; }
+<YYINITIAL> "("        { return JsToken.LPAR; }
+<YYINITIAL> ")"        { return JsToken.RPAR; }
+<YYINITIAL> "{"        { return JsToken.LBRACE; }
+<YYINITIAL> "}"        { return JsToken.RBRACE; }
+<YYINITIAL> "="        { return JsToken.EQ; }
+<YYINITIAL> ";"        { return JsToken.SEMICOLON; }
+<YYINITIAL> ","        { return JsToken.COMMA; }
+<YYINITIAL> "."        { return JsToken.DOT; }
 
 /* literals */
-{NumberLiteral}     { return JsToken.NUMBER_LITERAL; }
-"true"|"false"      { return JsToken.BOOLEAN_LITERAL; }
-{StringLiteral}     { return JsToken.STRING_LITERAL; }
+<YYINITIAL> {NumberLiteral}     { return JsToken.NUMBER_LITERAL; }
+<YYINITIAL> "true"|"false"      { return JsToken.BOOLEAN_LITERAL; }
+
+/* strings */
+<YYINITIAL> {DoubleQuote}       { yybegin(STRING); }
+<STRING> [^{DoubleQuote}]       { /* ignore */ }
+<STRING> {DoubleQuote}          { yybegin(YYINITIAL); return JsToken.STRING_LITERAL; }
 
 /* identifier */
-{Identifier}        { return JsToken.IDENTIFIER; }
+<YYINITIAL> {Identifier}        { return JsToken.IDENTIFIER; }
 
 /* whitespace */
-{WhiteSpace}        { /* ignore */ }
-{LineTerminator}    { return JsToken.EOL; }
+<YYINITIAL> {WhiteSpace}        { return JsToken.WHITESPACE; }
+<YYINITIAL> {LineTerminator}    { return JsToken.WHITESPACE; }
 
 /* catch all */
 [\s\S]              { return TokenType.BAD_CHARACTER; }
