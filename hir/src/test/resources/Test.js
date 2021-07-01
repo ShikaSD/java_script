@@ -3,4 +3,4 @@ function name(param1, param2) {
     print(hello)
 }
 
-name(0, "", "", "")
+name(.1, "", "", "")

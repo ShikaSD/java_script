@@ -46,7 +46,7 @@ WhiteSpace  = [ \t\f]
 
 Identifier = [:jletter:][:jletterdigit:]*
 Digit = [0-9]
-NumberLiteral = {Digit}+
+NumberLiteral = {Digit}*[\.]{Digit}+
 DoubleQuote = [\"]
 
 %state STRING

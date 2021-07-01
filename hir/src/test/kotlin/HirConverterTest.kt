@@ -49,6 +49,8 @@ class HirConverterTest {
                 CONST: Str(value="")
                 CONST: Str(value="")
                 CONST: Str(value="")
-        """.trimIndent(), hirFile.dump())
+        """.trimIndent(),
+            hirFile.dump()
+        )
     }
 }
