@@ -25,8 +25,6 @@ class JsParserTest {
                 depth--
             }
         })
-        result.deleteCharAt(result.lastIndex)
-
         assertEquals("""
             JsFile
               ASTWrapperPsiElement(FUNCTION)
@@ -104,6 +102,6 @@ class JsParserTest {
                       PsiElement(STRING_LITERAL)
                   PsiElement())
                   PsiElement(WHITESPACE)
-        """.trimIndent(), result.toString())
+        """.trimIndent(), result.trimEnd().toString())
     }
 }

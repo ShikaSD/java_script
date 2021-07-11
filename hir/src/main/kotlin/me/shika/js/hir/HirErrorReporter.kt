@@ -1,19 +1,19 @@
 package me.shika.js.hir
 
-import me.shika.js.hir.elements.HirSource
+import me.shika.js.SourceOffset
 
 class HirErrorReporter {
-    private val errors = mutableListOf<Error>()
+    private val errors = mutableListOf<HirError>()
 
-    fun reportError(message: String, location: HirSource) {
-        errors += Error(message, location)
+    fun reportError(message: String, location: SourceOffset) {
+        errors += HirError(message, location)
     }
 
-    fun getErrors(): List<Error> =
+    fun getErrors(): List<HirError> =
         errors
 }
 
-class Error(
+data class HirError(
     val text: String,
-    val location: HirSource
+    val location: SourceOffset
 )

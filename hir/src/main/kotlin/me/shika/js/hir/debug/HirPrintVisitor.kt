@@ -11,7 +11,7 @@ import me.shika.js.hir.elements.HirReference
 import me.shika.js.hir.elements.HirVariable
 import me.shika.js.hir.elements.HirVisitor
 
-class HirPrintVisitor : HirVisitor<StringBuilder> {
+class HirPrintVisitor : HirVisitor<StringBuilder, Unit> {
     private var indentation = 0
 
     override fun visitHirElement(hirElement: HirElement, data: StringBuilder) {
@@ -59,7 +59,7 @@ class HirPrintVisitor : HirVisitor<StringBuilder> {
     }
 
     override fun visitHirCall(hirCall: HirCall, data: StringBuilder) {
-        data.indentedLine("CALL name: ${hirCall.name}")
+        data.indentedLine("CALL: ${hirCall.candidate?.dumpShallow() ?: "<unresolved ${hirCall.name}>"}")
 
         withIndent {
             super.visitHirCall(hirCall, data)
@@ -75,7 +75,7 @@ class HirPrintVisitor : HirVisitor<StringBuilder> {
     }
 
     override fun visitHirReference(hirReference: HirReference, data: StringBuilder) {
-        data.indentedLine("REF: ${hirReference.name}")
+        data.indentedLine("REF: ${hirReference.candidate?.dumpShallow() ?: "<unresolved ${hirReference.name}>"}")
 
         withIndent {
             super.visitHirReference(hirReference, data)
@@ -94,6 +94,14 @@ class HirPrintVisitor : HirVisitor<StringBuilder> {
         }
         appendLine(line)
     }
+
+    private fun HirElement.dumpShallow(): String =
+        when (this) {
+            is HirFunction -> "function $name"
+            is HirVariable -> "variable $name"
+            is HirParameter -> "parameter $name"
+            else -> toString()
+        }
 }
 
 fun HirElement.dump(): String =

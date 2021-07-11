@@ -1,7 +1,7 @@
 package me.shika.js.hir.elements
 
-interface HirVisitor<ContextType> {
-    fun visitHirElement(hirElement: HirElement, data: ContextType)
+interface HirVisitor<ContextType, DataType> {
+    fun visitHirElement(hirElement: HirElement, data: ContextType): DataType
 
     fun visitHirFile(hirFile: HirFile, data: ContextType) =
         visitHirElement(hirFile, data)

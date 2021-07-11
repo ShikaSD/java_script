@@ -5,6 +5,10 @@ import com.intellij.openapi.util.Ref
 import com.intellij.psi.TokenType.BAD_CHARACTER
 import com.intellij.psi.tree.IElementType
 import com.intellij.util.diff.FlyweightCapableTreeStructure
+import me.shika.js.ConstValue.Bool
+import me.shika.js.ConstValue.Number
+import me.shika.js.ConstValue.Str
+import me.shika.js.SourceOffset
 import me.shika.js.elements.JsElementType
 import me.shika.js.elements.JsElementType.Companion.ARGUMENT
 import me.shika.js.elements.JsElementType.Companion.ARGUMENT_LIST
@@ -16,16 +20,12 @@ import me.shika.js.elements.JsElementType.Companion.VARIABLE
 import me.shika.js.hir.elements.HirBody
 import me.shika.js.hir.elements.HirCall
 import me.shika.js.hir.elements.HirConst
-import me.shika.js.hir.elements.HirConst.Value.Bool
-import me.shika.js.hir.elements.HirConst.Value.Number
-import me.shika.js.hir.elements.HirConst.Value.Str
 import me.shika.js.hir.elements.HirElement
 import me.shika.js.hir.elements.HirExpression
 import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
 import me.shika.js.hir.elements.HirParameter
 import me.shika.js.hir.elements.HirReference
-import me.shika.js.hir.elements.HirSource
 import me.shika.js.hir.elements.HirVariable
 import me.shika.js.lexer.JsToken
 import me.shika.js.lexer.JsToken.Companion.WHITESPACE
@@ -37,7 +37,7 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
         return HirFile(
             fileName,
             astNode.getChildren().mapNotNull { if (it != null) convert(it) else null },
-            astNode.hirSource
+            astNode.sourceOffset
         )
     }
 
@@ -50,7 +50,7 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
         }
 
     private fun convertFunction(astNode: LighterASTNode): HirFunction {
-        val source = astNode.hirSource
+        val source = astNode.sourceOffset
         val name = astNode.findOfType(JsToken.IDENTIFIER)
 
         if (name == null) {
@@ -78,7 +78,7 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
 
             val hirParameter = HirParameter(
                 name = it.firstChild().toString(),
-                source = it.hirSource
+                source = it.sourceOffset
             )
             result += hirParameter
         }
@@ -101,7 +101,7 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
             }
         }
 
-        return HirBody(statements, astNode.hirSource)
+        return HirBody(statements, astNode.sourceOffset)
     }
 
     private fun convertVariable(astNode: LighterASTNode): HirVariable {
@@ -110,24 +110,24 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
         return HirVariable(
             name = nameNode.toString(),
             value = astNode.findOfType(ARGUMENT)?.let { convertExpression(it.firstChild()!!) },
-            source = astNode.hirSource
+            source = astNode.sourceOffset
         )
     }
 
     private fun convertExpression(astNode: LighterASTNode): HirExpression? =
         when (astNode.tokenType) {
             JsElementType.STRING_CONSTANT ->
-                HirConst(Str(astNode.toString()), astNode.hirSource)
+                HirConst(Str(astNode.toString()), astNode.sourceOffset)
             JsElementType.NUMBER_CONSTANT ->
-                HirConst(Number(astNode.toString().toDouble()), astNode.hirSource)
+                HirConst(Number(astNode.toString().toDouble()), astNode.sourceOffset)
             JsElementType.BOOLEAN_CONSTANT ->
-                HirConst(Bool(astNode.toString().toBooleanStrict()), astNode.hirSource)
+                HirConst(Bool(astNode.toString().toBooleanStrict()), astNode.sourceOffset)
             JsElementType.REFERENCE -> convertReference(astNode)
             JsElementType.CALL -> convertCall(astNode)
             BAD_CHARACTER -> {
                 errorReporter.reportError(
                     "Found bad character",
-                    astNode.hirSource
+                    astNode.sourceOffset
                 )
                 null
             }
@@ -139,7 +139,7 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
     private fun convertReference(astNode: LighterASTNode): HirReference =
         HirReference(
             name = astNode.toString(),
-            source = astNode.hirSource
+            source = astNode.sourceOffset
         )
 
     private fun convertCall(astNode: LighterASTNode): HirCall {
@@ -149,7 +149,7 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
         return HirCall(
             name = name.toString(),
             arguments = arguments,
-            source = astNode.hirSource
+            source = astNode.sourceOffset
         )
     }
 
@@ -165,7 +165,7 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
         return result
     }
 
-    private val LighterASTNode.hirSource get() = HirSource(startOffset, endOffset)
+    private val LighterASTNode.sourceOffset get() = SourceOffset(startOffset, endOffset)
 
     private fun LighterASTNode.getChildren(): Array<LighterASTNode?> {
         val ref = Ref<Array<LighterASTNode?>>()
