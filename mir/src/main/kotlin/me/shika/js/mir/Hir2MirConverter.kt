@@ -16,6 +16,7 @@ import me.shika.js.mir.elements.MirBody
 import me.shika.js.mir.elements.MirCall
 import me.shika.js.mir.elements.MirConst
 import me.shika.js.mir.elements.MirElement
+import me.shika.js.mir.elements.MirElementWithParent
 import me.shika.js.mir.elements.MirExpression
 import me.shika.js.mir.elements.MirFile
 import me.shika.js.mir.elements.MirFunction
@@ -23,17 +24,22 @@ import me.shika.js.mir.elements.MirFunctionSymbol
 import me.shika.js.mir.elements.MirParameter
 import me.shika.js.mir.elements.MirReference
 import me.shika.js.mir.elements.MirVariable
+import me.shika.js.mir.elements.MirVisitor
 
 class Hir2MirConverter {
     private val symbolTable = MirSymbolTable()
     private val visitor = Hir2MirVisitor()
+    private val parentsPatch = PatchMirParents()
 
     init {
-        visitor.visitHirFunction(BuiltIns.Print, null)
+        val function = visitor.visitHirFunction(BuiltIns.Print, null)
+        parentsPatch.visitMirFunction(function, BuiltInsFile)
     }
 
     fun convertFile(hirFile: HirFile): MirFile =
-        Hir2MirVisitor().visitHirFile(hirFile, null)
+        visitor.visitHirFile(hirFile, null).also {
+            parentsPatch.visitMirFile(it, it)
+        }
 
     private inner class Hir2MirVisitor : HirVisitor<Nothing?, MirElement?> {
         override fun visitHirElement(hirElement: HirElement, data: Nothing?): MirElement? {
@@ -102,5 +108,17 @@ class Hir2MirConverter {
                 value = hirConst.value,
                 source = hirConst.source
             )
+    }
+
+    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
+    private class PatchMirParents : MirVisitor<MirElement?> {
+        override fun visitMirElement(element: MirElement, parent: MirElement?) {
+            if (element is MirElementWithParent) {
+                element.parent = parent
+                element.acceptChildren(this, element)
+            } else {
+                element.acceptChildren(this, parent)
+            }
+        }
     }
 }

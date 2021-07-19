@@ -14,6 +14,10 @@ interface MirSymbolOwner<Owner : MirElement> {
     val symbol: MirSymbol<Owner>
 }
 
+interface MirElementWithParent : MirElement {
+    var parent: MirElement?
+}
+
 class MirFile(val fileName: String, val statements: List<MirElement>, override val source: SourceOffset) : MirElement {
     override fun <Context> accept(visitor: MirVisitor<Context>, data: Context) {
         visitor.visitMirFile(this, data)
@@ -30,10 +34,12 @@ class MirFunction(
     val parameters: List<MirParameter>,
     val body: MirBody,
     override val source: SourceOffset = SourceOffset.NO_SOURCE
-) : MirElement, MirSymbolOwner<MirFunction> {
+) : MirElementWithParent, MirSymbolOwner<MirFunction> {
     init {
         symbol.bind(this)
     }
+
+    override var parent: MirElement? = null
 
     override fun <Context> accept(visitor: MirVisitor<Context>, data: Context) {
         visitor.visitMirFunction(this, data)
@@ -49,10 +55,12 @@ class MirParameter(
     override val symbol: MirParameterSymbol,
     val name: String,
     override val source: SourceOffset = SourceOffset.NO_SOURCE
-) : MirElement, MirSymbolOwner<MirParameter> {
+) : MirElementWithParent, MirSymbolOwner<MirParameter> {
     init {
         symbol.bind(this)
     }
+
+    override var parent: MirElement? = null
 
     override fun <Context> accept(visitor: MirVisitor<Context>, data: Context) {
         visitor.visitMirParameter(this, data)
@@ -78,10 +86,12 @@ class MirVariable(
     val name: String,
     val value: MirExpression?,
     override val source: SourceOffset
-) : MirElement, MirSymbolOwner<MirVariable> {
+) : MirElementWithParent, MirSymbolOwner<MirVariable> {
     init {
         symbol.bind(this)
     }
+
+    override var parent: MirElement? = null
 
     override fun <Context> accept(visitor: MirVisitor<Context>, data: Context) {
         visitor.visitMirVariable(this, data)

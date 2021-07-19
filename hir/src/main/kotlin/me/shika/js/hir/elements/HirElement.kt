@@ -35,10 +35,10 @@ class HirFunction(
     }
 
     companion object {
-        fun builtin(name: String): HirFunction =
+        fun builtin(name: String, parameters: List<HirParameter> = emptyList()): HirFunction =
             HirFunction(
                 name = name,
-                parameters = emptyList(),
+                parameters = parameters,
                 body = HirBody(emptyList())
             )
     }

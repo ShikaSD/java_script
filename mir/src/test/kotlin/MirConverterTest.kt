@@ -43,7 +43,7 @@ class MirConverterTest {
     }
 
     @Test
-    fun testHirConversion() {
+    fun testMirConversion() {
         val hirFile = getTestHir()
         val mirFile = Hir2MirConverter().convertFile(hirFile)
 

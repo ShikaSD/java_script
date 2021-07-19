@@ -117,7 +117,7 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
     private fun convertExpression(astNode: LighterASTNode): HirExpression? =
         when (astNode.tokenType) {
             JsElementType.STRING_CONSTANT ->
-                HirConst(Str(astNode.toString()), astNode.sourceOffset)
+                HirConst(Str(astNode.toString().trim { it == '"' }), astNode.sourceOffset)
             JsElementType.NUMBER_CONSTANT ->
                 HirConst(Number(astNode.toString().toDouble()), astNode.sourceOffset)
             JsElementType.BOOLEAN_CONSTANT ->

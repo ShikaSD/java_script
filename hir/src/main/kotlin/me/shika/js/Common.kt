@@ -8,7 +8,9 @@ data class SourceOffset(val startOffset: Int, val endOffset: Int) {
 }
 
 sealed class ConstValue {
-    data class Number(val value: Double) : ConstValue()
-    data class Str(val value: String) : ConstValue()
-    data class Bool(val value: Boolean) : ConstValue()
+    abstract val value: Any
+
+    data class Number(override val value: Double) : ConstValue()
+    data class Str(override val value: String) : ConstValue()
+    data class Bool(override val value: Boolean) : ConstValue()
 }
