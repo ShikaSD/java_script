@@ -12,6 +12,7 @@ import me.shika.js.hir.elements.HirParameter
 import me.shika.js.hir.elements.HirReference
 import me.shika.js.hir.elements.HirVariable
 import me.shika.js.hir.elements.HirVisitor
+import me.shika.js.hir.elements.functions
 import me.shika.js.mir.elements.MirBody
 import me.shika.js.mir.elements.MirCall
 import me.shika.js.mir.elements.MirConst
@@ -47,12 +48,16 @@ class Hir2MirConverter {
             return null
         }
 
-        override fun visitHirFile(hirFile: HirFile, data: Nothing?): MirFile =
-            MirFile(
+        override fun visitHirFile(hirFile: HirFile, data: Nothing?): MirFile {
+            // Top level functions can be referenced before declared
+            hirFile.functions.forEach { symbolTable.declareFunctionSymbol(it) }
+
+            return MirFile(
                 fileName = hirFile.fileName,
                 statements = hirFile.statements.mapNotNull { it.accept(this, null) },
                 source = hirFile.source
             )
+        }
 
         override fun visitHirFunction(hirFunction: HirFunction, data: Nothing?): MirFunction =
             MirFunction(

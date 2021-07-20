@@ -27,11 +27,8 @@ import org.objectweb.asm.Opcodes.ACC_PUBLIC
 import org.objectweb.asm.Opcodes.ACC_STATIC
 import org.objectweb.asm.Opcodes.ALOAD
 import org.objectweb.asm.Opcodes.ASTORE
-import org.objectweb.asm.Opcodes.GETSTATIC
 import org.objectweb.asm.Opcodes.INVOKESTATIC
-import org.objectweb.asm.Opcodes.INVOKEVIRTUAL
 import org.objectweb.asm.Opcodes.RETURN
-import org.objectweb.asm.Opcodes.SWAP
 
 private const val VERSION = Opcodes.V1_8
 
@@ -217,17 +214,12 @@ class Mir2AsmConverter {
         }
 
         private fun visitPrintCall(call: MirCall, data: MethodVisitor) {
-            // GETSTATIC java/lang/System.out : Ljava/io/PrintStream;
-            // ALOAD PARAM
-            // INVOKEVIRTUAL java/io/PrintStream.println (Ljava/lang/Object;)V
+            // INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
 
-            data.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;")
-            // arg is already loaded before, but we need it to be ordered after
-            data.visitInsn(SWAP)
             data.visitMethodInsn(
-                INVOKEVIRTUAL,
-                "java/io/PrintStream",
-                "println",
+                INVOKESTATIC,
+                "js/ConsoleKt",
+                "print",
                 "(Ljava/lang/Object;)V",
                 false
             )

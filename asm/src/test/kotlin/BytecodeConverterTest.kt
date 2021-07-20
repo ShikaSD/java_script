@@ -56,6 +56,8 @@ class BytecodeConverterTest {
         Mir2AsmConverter().convertFile(mirFile, writer)
         val clsBytes = writer.toByteArray()
 
+        runClass(clsBytes, "Test_js")
+
         val reader = ClassReader(clsBytes)
         reader.accept(TraceClassVisitor(PrintWriter(stringWriter)), 0)
 
@@ -72,23 +74,25 @@ class BytecodeConverterTest {
                 LDC "value"
                 ASTORE 2
                 ALOAD 2
-                GETSTATIC java/lang/System.out : Ljava/io/PrintStream;
-                SWAP
-                INVOKEVIRTUAL java/io/PrintStream.println (Ljava/lang/Object;)V
+                INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
                 ALOAD 1
-                GETSTATIC java/lang/System.out : Ljava/io/PrintStream;
-                SWAP
-                INVOKEVIRTUAL java/io/PrintStream.println (Ljava/lang/Object;)V
+                INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
                 ALOAD 0
-                GETSTATIC java/lang/System.out : Ljava/io/PrintStream;
-                SWAP
-                INVOKEVIRTUAL java/io/PrintStream.println (Ljava/lang/Object;)V
+                INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
                 RETURN
                 LOCALVARIABLE param1 Ljava/lang/Object; L0 L0 0
                 LOCALVARIABLE param2 Ljava/lang/Object; L0 L0 1
                 LOCALVARIABLE hello Ljava/lang/Object; L0 L0 2
-                MAXSTACK = 2
+                MAXSTACK = 1
                 MAXLOCALS = 3
+            
+              // access flags 0x19
+              public final static anotherFunction()V
+                LDC "I am getting called!"
+                INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
+                RETURN
+                MAXSTACK = 1
+                MAXLOCALS = 0
             
               // access flags 0x8
               static <clinit>()V
@@ -96,6 +100,8 @@ class BytecodeConverterTest {
                 INVOKESTATIC java/lang/Double.valueOf (D)Ljava/lang/Double;
                 LDC ""
                 INVOKESTATIC Test_js.myFunction (Ljava/lang/Object;Ljava/lang/Object;)V
+                LDC "Static init end."
+                INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
                 RETURN
                 MAXSTACK = 2
                 MAXLOCALS = 0
@@ -104,16 +110,18 @@ class BytecodeConverterTest {
             stringWriter.toString().trimEnd()
         )
 
+    }
+
+    fun runClass(bytes: ByteArray, clsName: String) {
         val classLoader = object : ClassLoader(javaClass.classLoader) {
             override fun findClass(name: String?): Class<*> =
-                if (name == "Test_js") {
-                    defineClass("Test_js", clsBytes, 0, clsBytes.size)
+                if (name == clsName) {
+                    defineClass(clsName, bytes, 0, bytes.size)
                 } else {
                     super.findClass(name)
                 }
         }
         // force init
-        Class.forName("Test_js", true, classLoader)
-
+        Class.forName(clsName, true, classLoader)
     }
 }

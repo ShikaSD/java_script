@@ -10,7 +10,10 @@ dependencies {
     implementation(project(":mir"))
     implementation(project(":hir"))
 
+    testImplementation("junit:junit:4.13")
+
+    testImplementation(project(":runtime"))
+
     testImplementation(project(":parser"))
     testImplementation(project(":hir"))
-    testImplementation("junit:junit:4.13")
 }

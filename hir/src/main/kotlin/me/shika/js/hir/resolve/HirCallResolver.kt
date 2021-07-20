@@ -3,14 +3,23 @@ package me.shika.js.hir.resolve
 import me.shika.js.hir.HirErrorReporter
 import me.shika.js.hir.elements.HirCall
 import me.shika.js.hir.elements.HirElement
+import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
 import me.shika.js.hir.elements.HirParameter
 import me.shika.js.hir.elements.HirReference
 import me.shika.js.hir.elements.HirVariable
 import me.shika.js.hir.elements.HirVisitor
+import me.shika.js.hir.elements.functions
 
 @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
 class HirReferenceResolver(private val errorReporter: HirErrorReporter) : HirVisitor<Scope, Unit> {
+    override fun visitHirFile(hirFile: HirFile, scope: Scope) {
+        // Root level functions can be referenced before they are declared
+        hirFile.functions.forEach { function -> scope.addElement(function.name, function) }
+
+        super.visitHirFile(hirFile, scope)
+    }
+
     override fun visitHirElement(hirElement: HirElement, scope: Scope) {
         hirElement.acceptChildren(this, scope)
     }

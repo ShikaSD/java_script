@@ -20,6 +20,8 @@ class HirFile(val fileName: String, val statements: List<HirElement>, override v
     }
 }
 
+val HirFile.functions get() = statements.asSequence().filterIsInstance<HirFunction>()
+
 class HirFunction(
     val name: String,
     val parameters: List<HirParameter>,
