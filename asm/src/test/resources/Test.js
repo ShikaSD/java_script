@@ -1,14 +1,15 @@
 function myFunction(param1, param2) {
-    var hello = "value";
+    var hello = "1";
     print(hello)
     print(param2)
-    print(param1)
-    anotherFunction()
+    anotherFunction(param1)
 }
 
-function anotherFunction() {
-    print("I am getting called!")
+function anotherFunction(param) {
+    print(param)
 }
 
-myFunction(.1, "")
-print("Static init end.")
+var element = "5"
+myFunction(2.0, "3")
+print("4")
+print(element)

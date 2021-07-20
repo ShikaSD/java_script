@@ -68,17 +68,20 @@ class BytecodeConverterTest {
             public class Test_js {
             
             
+              // access flags 0x9
+              public static Ljava/lang/Object; element
+            
               // access flags 0x19
               public final static myFunction(Ljava/lang/Object;Ljava/lang/Object;)V
                L0
-                LDC "value"
+                LDC "1"
                 ASTORE 2
                 ALOAD 2
                 INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
                 ALOAD 1
                 INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
                 ALOAD 0
-                INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
+                INVOKESTATIC Test_js.anotherFunction (Ljava/lang/Object;)V
                 RETURN
                 LOCALVARIABLE param1 Ljava/lang/Object; L0 L0 0
                 LOCALVARIABLE param2 Ljava/lang/Object; L0 L0 1
@@ -87,26 +90,31 @@ class BytecodeConverterTest {
                 MAXLOCALS = 3
             
               // access flags 0x19
-              public final static anotherFunction()V
-                LDC "I am getting called!"
+              public final static anotherFunction(Ljava/lang/Object;)V
+               L0
+                ALOAD 0
                 INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
                 RETURN
+                LOCALVARIABLE param Ljava/lang/Object; L0 L0 0
                 MAXSTACK = 1
-                MAXLOCALS = 0
+                MAXLOCALS = 1
             
               // access flags 0x8
               static <clinit>()V
-                LDC 0.1
+                LDC "5"
+                PUTSTATIC Test_js.element : Ljava/lang/Object;
+                LDC 2.0
                 INVOKESTATIC java/lang/Double.valueOf (D)Ljava/lang/Double;
-                LDC ""
+                LDC "3"
                 INVOKESTATIC Test_js.myFunction (Ljava/lang/Object;Ljava/lang/Object;)V
-                LDC "Static init end."
+                LDC "4"
+                INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
+                GETSTATIC Test_js.element : Ljava/lang/Object;
                 INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
                 RETURN
                 MAXSTACK = 2
                 MAXLOCALS = 0
-            }
-            """.trimIndent(),
+            }""".trimIndent(),
             stringWriter.toString().trimEnd()
         )
 

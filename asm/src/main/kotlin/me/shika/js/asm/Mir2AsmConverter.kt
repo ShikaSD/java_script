@@ -27,7 +27,9 @@ import org.objectweb.asm.Opcodes.ACC_PUBLIC
 import org.objectweb.asm.Opcodes.ACC_STATIC
 import org.objectweb.asm.Opcodes.ALOAD
 import org.objectweb.asm.Opcodes.ASTORE
+import org.objectweb.asm.Opcodes.GETSTATIC
 import org.objectweb.asm.Opcodes.INVOKESTATIC
+import org.objectweb.asm.Opcodes.PUTSTATIC
 import org.objectweb.asm.Opcodes.RETURN
 
 private const val VERSION = Opcodes.V1_8
@@ -89,6 +91,29 @@ class Mir2AsmConverter {
             methodBuilder.visitMirFunction(function, methodVisitor)
 
             methodVisitor.visitEnd()
+        }
+
+        override fun visitMirVariable(variable: MirVariable, data: Nothing?) {
+            val field = classVisitor.visitField(
+                ACC_STATIC or ACC_PUBLIC,
+                variable.name,
+                JOBJECT_SIGNATURE,
+                null,
+                null
+            )
+            field.visitEnd()
+
+            if (variable.value != null) {
+                variable.value?.accept(
+                    Mir2AsmMethod(null), staticInitVisitor
+                )
+                staticInitVisitor.visitFieldInsn(
+                    PUTSTATIC,
+                    (variable.parent as MirFile).className(),
+                    variable.name,
+                    JOBJECT_SIGNATURE
+                )
+            }
         }
 
         override fun visitMirExpression(expression: MirExpression, data: Nothing?) {
@@ -172,17 +197,22 @@ class Mir2AsmConverter {
         override fun visitMirReference(reference: MirReference, data: MethodVisitor) {
             val symbol = reference.symbol
 
-            when (val owner = symbol.owner) {
-                is MirElementWithParent -> {
-                    val function = owner.parent as MirFunction
-                    require(function == currentFunction) {
-                        "Cannot capture ${reference.dump()} from function ${function.dump()}"
-                    }
-                }
-            }
-
             require(symbol is MirVariableSymbol || symbol is MirParameterSymbol) {
                 "Can only reference variables and parameters, found ${reference.dump()}"
+            }
+
+            if (symbol.owner is MirElementWithParent) {
+                val parent = (symbol.owner as MirElementWithParent).parent
+                if (parent is MirFile) {
+                    // top of the file, use getstatic instead
+                    data.visitFieldInsn(
+                        GETSTATIC,
+                        parent.className(),
+                        (symbol.owner as MirVariable).name,
+                        JOBJECT_SIGNATURE
+                    )
+                    return
+                }
             }
 
             val index = frameMap.localIndex(symbol)
