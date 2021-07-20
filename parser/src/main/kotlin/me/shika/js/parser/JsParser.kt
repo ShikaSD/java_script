@@ -13,6 +13,10 @@ import me.shika.js.elements.JsElementType.Companion.BOOLEAN_CONSTANT
 import me.shika.js.elements.JsElementType.Companion.FILE
 import me.shika.js.elements.JsElementType.Companion.FUNCTION
 import me.shika.js.elements.JsElementType.Companion.NUMBER_CONSTANT
+import me.shika.js.elements.JsElementType.Companion.OBJECT
+import me.shika.js.elements.JsElementType.Companion.OBJECT_CLAUSE
+import me.shika.js.elements.JsElementType.Companion.OBJECT_KEY
+import me.shika.js.elements.JsElementType.Companion.OBJECT_VALUE
 import me.shika.js.elements.JsElementType.Companion.PARAMETER
 import me.shika.js.elements.JsElementType.Companion.PARAMETER_LIST
 import me.shika.js.elements.JsElementType.Companion.REFERENCE
@@ -20,6 +24,7 @@ import me.shika.js.elements.JsElementType.Companion.STRING_CONSTANT
 import me.shika.js.elements.JsElementType.Companion.VARIABLE
 import me.shika.js.lexer.JsToken
 import me.shika.js.lexer.JsToken.Companion.BOOLEAN_LITERAL
+import me.shika.js.lexer.JsToken.Companion.COLON
 import me.shika.js.lexer.JsToken.Companion.COMMA
 import me.shika.js.lexer.JsToken.Companion.EQ
 import me.shika.js.lexer.JsToken.Companion.FUNCTION_KEYWORD
@@ -38,6 +43,8 @@ class JsParser : PsiParser {
     override fun parse(elementType: IElementType, builder: PsiBuilder): ASTNode =
         JsParsing(builder).parseFile()
 }
+
+private val DEFAULT_RECOVERY_SET = TokenSet.create(RPAR, RBRACE, SEMICOLON)
 
 class JsParsing(private val psiBuilder: PsiBuilder) {
     init {
@@ -160,6 +167,8 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
     private fun parseAtomicExpression(): Boolean {
         if (parseReference()) {
             // TODO
+        } else if (parseObject()) {
+            // TODO
         } else if (!parseLiteral()) {
             return false
             //error("Unknown expression", TokenSet.create(EOL, SEMICOLON))
@@ -169,6 +178,7 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
     }
 
     private fun parseExpression(): Boolean {
+        // Basically parses call now
         val callMark = psiBuilder.mark()
 
         val hasAtomic = parseAtomicExpression()
@@ -232,6 +242,55 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
         return false
     }
 
+    private fun parseObject(): Boolean {
+        if (!at(LBRACE)) return false
+
+        val objectMark = psiBuilder.mark()
+        advance()
+
+        while (!at(RBRACE)) {
+            val objectClauseMark = psiBuilder.mark()
+
+            val objectKeyMark = psiBuilder.mark()
+            if (expect(IDENTIFIER, "Expected object key", advance = true)) {
+                objectKeyMark.done(OBJECT_KEY)
+            } else {
+                objectKeyMark.drop()
+                objectClauseMark.drop()
+                continue
+            }
+
+            expect(COLON, "Expected colon between object key and value", advance = true)
+
+            val objectValueMark = psiBuilder.mark()
+            val parsed = parseExpression()
+            if (!parsed) {
+                error("Expected value for the object")
+                objectValueMark.drop()
+                objectClauseMark.drop()
+                continue
+            } else {
+                objectValueMark.done(OBJECT_VALUE)
+                objectClauseMark.done(OBJECT_CLAUSE)
+            }
+
+            skipSpace()
+
+            if (at(COMMA)) {
+                advance() // next clause
+            } else {
+                if (!at(RBRACE)) {
+                    error("Object clauses must be separated by comma")
+                }
+            }
+        }
+        advance()
+
+        objectMark.done(OBJECT)
+
+        return true
+    }
+
     private fun startPsiElement(requiredToken: JsToken): PsiBuilder.Marker {
         require(at(requiredToken)) { "Expected $requiredToken, but got ${current()}"}
         val mark = psiBuilder.mark()
@@ -245,7 +304,7 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
         mark.done(type)
     }
 
-    private fun expect(token: JsToken, message: String, advance: Boolean = false, recovery: TokenSet = TokenSet.EMPTY): Boolean {
+    private fun expect(token: JsToken, message: String, advance: Boolean = false, recovery: TokenSet = DEFAULT_RECOVERY_SET): Boolean {
         if (at(token)) {
             if (advance) {
                 advance()
@@ -258,7 +317,7 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
         return false
     }
 
-    private fun error(message: String, recovery: TokenSet = TokenSet.EMPTY)  {
+    private fun error(message: String, recovery: TokenSet = DEFAULT_RECOVERY_SET)  {
         if (recovery.contains(current())) {
             psiBuilder.error(message)
         } else {

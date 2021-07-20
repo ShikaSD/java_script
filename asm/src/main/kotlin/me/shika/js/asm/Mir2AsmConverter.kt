@@ -11,6 +11,7 @@ import me.shika.js.mir.elements.MirElementWithParent
 import me.shika.js.mir.elements.MirExpression
 import me.shika.js.mir.elements.MirFile
 import me.shika.js.mir.elements.MirFunction
+import me.shika.js.mir.elements.MirObjectExpression
 import me.shika.js.mir.elements.MirParameter
 import me.shika.js.mir.elements.MirParameterSymbol
 import me.shika.js.mir.elements.MirReference
@@ -27,8 +28,12 @@ import org.objectweb.asm.Opcodes.ACC_PUBLIC
 import org.objectweb.asm.Opcodes.ACC_STATIC
 import org.objectweb.asm.Opcodes.ALOAD
 import org.objectweb.asm.Opcodes.ASTORE
+import org.objectweb.asm.Opcodes.DUP
 import org.objectweb.asm.Opcodes.GETSTATIC
+import org.objectweb.asm.Opcodes.INVOKESPECIAL
 import org.objectweb.asm.Opcodes.INVOKESTATIC
+import org.objectweb.asm.Opcodes.INVOKEVIRTUAL
+import org.objectweb.asm.Opcodes.NEW
 import org.objectweb.asm.Opcodes.PUTSTATIC
 import org.objectweb.asm.Opcodes.RETURN
 
@@ -36,6 +41,8 @@ private const val VERSION = Opcodes.V1_8
 
 private const val JOBJECT_NAME = "java/lang/Object"
 private const val JOBJECT_SIGNATURE = "L$JOBJECT_NAME;"
+
+private const val JSOBJECT_NAME = "js/JsObject"
 
 private const val JS_ACC_CONST = ACC_PUBLIC or ACC_STATIC or ACC_FINAL
 
@@ -253,6 +260,37 @@ class Mir2AsmConverter {
                 "(Ljava/lang/Object;)V",
                 false
             )
+        }
+
+        override fun visitMirObjectExpression(objectExpression: MirObjectExpression, data: MethodVisitor) {
+            //    NEW js/JsObject
+            //    DUP
+            //    INVOKESPECIAL js/JsObject.<init> ()V
+            data.visitTypeInsn(NEW, JSOBJECT_NAME)
+            data.visitInsn(DUP)
+            data.visitMethodInsn(
+                INVOKESPECIAL,
+                JSOBJECT_NAME,
+                "<init>",
+                "()V",
+                false
+            )
+
+            if (objectExpression.entries.isNotEmpty()) {
+                for (entry in objectExpression.entries) {
+                    // ensure object is kept on stack after we add entry
+                    data.visitInsn(DUP)
+                    data.visitLdcInsn(entry.key)
+                    entry.value.accept(this, data)
+                    data.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        JSOBJECT_NAME,
+                        "add",
+                        "(Ljava/lang/String;Ljava/lang/Object;)V",
+                        false
+                    )
+                }
+            }
         }
 
         override fun visitMirConst(const: MirConst, data: MethodVisitor) {

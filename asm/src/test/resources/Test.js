@@ -3,6 +3,12 @@ function myFunction(param1, param2) {
     print(hello)
     print(param2)
     anotherFunction(param1)
+    anotherFunction({
+        key: hello,
+        secondKey: {
+            nestedKey: "nestedValue"
+        }
+    })
 }
 
 function anotherFunction(param) {
@@ -10,6 +16,6 @@ function anotherFunction(param) {
 }
 
 var element = "5"
-myFunction(2.0, "3")
+myFunction(3.0, "2")
 print("4")
 print(element)

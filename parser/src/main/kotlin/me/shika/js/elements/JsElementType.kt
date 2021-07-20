@@ -21,6 +21,11 @@ class JsElementType(debugName: String) : IElementType(debugName, JsLanguage) {
         val ARGUMENT = jsElement("ARGUMENT")
         val REFERENCE = jsElement("REFERENCE")
 
+        val OBJECT = jsElement("OBJECT")
+        val OBJECT_CLAUSE = jsElement("OBJECT_CLAUSE")
+        val OBJECT_KEY = jsElement("OBJECT_KEY")
+        val OBJECT_VALUE = jsElement("OBJECT_VALUE")
+
         val STRING_CONSTANT = jsElement("STRING_CONSTANT")
         val BOOLEAN_CONSTANT = jsElement("BOOLEAN_CONSTANT")
         val NUMBER_CONSTANT = jsElement("NUMBER_CONSTANT")

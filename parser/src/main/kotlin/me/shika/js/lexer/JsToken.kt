@@ -42,6 +42,8 @@ class JsToken(debugName: String) : IElementType(debugName, JsLanguage) {
         @JvmField
         val SEMICOLON = JsToken(";")
         @JvmField
+        val COLON = JsToken(":")
+        @JvmField
         val COMMA = JsToken(",")
         @JvmField
         val DOT = JsToken(".")

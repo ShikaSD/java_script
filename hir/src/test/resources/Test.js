@@ -1,6 +1,12 @@
-function myFunction(param1, param2) {
+function name(param1, param2) {
     var hello = "value";
-    print(hello, param1, param2)
+    var test = {
+        key: hello,
+        secondKey: {
+            nestedKey: "nestedValue"
+        }
+    }
+    print(hello)
 }
 
-myFunction(.1, "", "", "")
+name(0.6, "", "", "")

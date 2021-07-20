@@ -14,6 +14,9 @@ import me.shika.js.elements.JsElementType.Companion.ARGUMENT
 import me.shika.js.elements.JsElementType.Companion.ARGUMENT_LIST
 import me.shika.js.elements.JsElementType.Companion.BLOCK
 import me.shika.js.elements.JsElementType.Companion.FUNCTION
+import me.shika.js.elements.JsElementType.Companion.OBJECT_CLAUSE
+import me.shika.js.elements.JsElementType.Companion.OBJECT_KEY
+import me.shika.js.elements.JsElementType.Companion.OBJECT_VALUE
 import me.shika.js.elements.JsElementType.Companion.PARAMETER
 import me.shika.js.elements.JsElementType.Companion.PARAMETER_LIST
 import me.shika.js.elements.JsElementType.Companion.VARIABLE
@@ -24,6 +27,7 @@ import me.shika.js.hir.elements.HirElement
 import me.shika.js.hir.elements.HirExpression
 import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
+import me.shika.js.hir.elements.HirObjectExpression
 import me.shika.js.hir.elements.HirParameter
 import me.shika.js.hir.elements.HirReference
 import me.shika.js.hir.elements.HirVariable
@@ -124,6 +128,7 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
                 HirConst(Bool(astNode.toString().toBooleanStrict()), astNode.sourceOffset)
             JsElementType.REFERENCE -> convertReference(astNode)
             JsElementType.CALL -> convertCall(astNode)
+            JsElementType.OBJECT -> convertObjectExpression(astNode)
             BAD_CHARACTER -> {
                 errorReporter.reportError(
                     "Found bad character",
@@ -163,6 +168,27 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
         }
 
         return result
+    }
+
+    private fun convertObjectExpression(astNode: LighterASTNode): HirObjectExpression {
+        val entries = mutableMapOf<String, HirExpression>()
+
+        astNode.forEachChildren {
+            if (it?.tokenType != OBJECT_CLAUSE) return@forEachChildren
+
+            val key = it.findOfType(OBJECT_KEY)!!
+            val value = it.findOfType(OBJECT_VALUE)!!
+
+            val valueExpression = convertExpression(value.firstChild()!!)
+
+            if (valueExpression != null) {
+                entries[key.toString()] = valueExpression
+            } else {
+                errorReporter.reportError("Unknown expression", value.sourceOffset)
+            }
+        }
+
+        return HirObjectExpression(entries, astNode.sourceOffset)
     }
 
     private val LighterASTNode.sourceOffset get() = SourceOffset(startOffset, endOffset)

@@ -127,6 +127,21 @@ class MirReference(val symbol: MirSymbol<*>, override val source: SourceOffset =
     }
 }
 
+class MirObjectExpression(
+    val entries: Map<String, MirExpression>,
+    override val source: SourceOffset = SourceOffset.NO_SOURCE
+) : MirExpression {
+    override fun <Context> accept(visitor: MirVisitor<Context>, data: Context) {
+        visitor.visitMirObjectExpression(this, data)
+    }
+
+    override fun <Context> acceptChildren(visitor: MirVisitor<Context>, data: Context) {
+        entries.values.forEach {
+            it.accept(visitor, data)
+        }
+    }
+}
+
 class MirCall(
     val symbol: MirFunctionSymbol,
     val arguments: List<MirExpression?>,

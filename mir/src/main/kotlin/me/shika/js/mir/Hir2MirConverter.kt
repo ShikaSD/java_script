@@ -8,6 +8,7 @@ import me.shika.js.hir.elements.HirElement
 import me.shika.js.hir.elements.HirExpression
 import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
+import me.shika.js.hir.elements.HirObjectExpression
 import me.shika.js.hir.elements.HirParameter
 import me.shika.js.hir.elements.HirReference
 import me.shika.js.hir.elements.HirVariable
@@ -22,6 +23,7 @@ import me.shika.js.mir.elements.MirExpression
 import me.shika.js.mir.elements.MirFile
 import me.shika.js.mir.elements.MirFunction
 import me.shika.js.mir.elements.MirFunctionSymbol
+import me.shika.js.mir.elements.MirObjectExpression
 import me.shika.js.mir.elements.MirParameter
 import me.shika.js.mir.elements.MirReference
 import me.shika.js.mir.elements.MirVariable
@@ -106,6 +108,14 @@ class Hir2MirConverter {
             MirReference(
                 symbol = symbolTable.referenceSymbol(hirReference.candidate!!),
                 source = hirReference.source
+            )
+
+        override fun visitHirObjectExpression(hirObjectExpression: HirObjectExpression, data: Nothing?): MirObjectExpression =
+            MirObjectExpression(
+                entries = hirObjectExpression.entries.mapValues {
+                    it.value.accept(this, null) as MirExpression
+                },
+                source = hirObjectExpression.source
             )
 
         override fun visitHirConst(hirConst: HirConst, data: Nothing?): MirConst =

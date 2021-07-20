@@ -82,11 +82,29 @@ class BytecodeConverterTest {
                 INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
                 ALOAD 0
                 INVOKESTATIC Test_js.anotherFunction (Ljava/lang/Object;)V
+                NEW js/JsObject
+                DUP
+                INVOKESPECIAL js/JsObject.<init> ()V
+                DUP
+                LDC "key"
+                ALOAD 2
+                INVOKEVIRTUAL js/JsObject.add (Ljava/lang/String;Ljava/lang/Object;)V
+                DUP
+                LDC "secondKey"
+                NEW js/JsObject
+                DUP
+                INVOKESPECIAL js/JsObject.<init> ()V
+                DUP
+                LDC "nestedKey"
+                LDC "nestedValue"
+                INVOKEVIRTUAL js/JsObject.add (Ljava/lang/String;Ljava/lang/Object;)V
+                INVOKEVIRTUAL js/JsObject.add (Ljava/lang/String;Ljava/lang/Object;)V
+                INVOKESTATIC Test_js.anotherFunction (Ljava/lang/Object;)V
                 RETURN
                 LOCALVARIABLE param1 Ljava/lang/Object; L0 L0 0
                 LOCALVARIABLE param2 Ljava/lang/Object; L0 L0 1
                 LOCALVARIABLE hello Ljava/lang/Object; L0 L0 2
-                MAXSTACK = 1
+                MAXSTACK = 7
                 MAXLOCALS = 3
             
               // access flags 0x19
@@ -103,9 +121,9 @@ class BytecodeConverterTest {
               static <clinit>()V
                 LDC "5"
                 PUTSTATIC Test_js.element : Ljava/lang/Object;
-                LDC 2.0
+                LDC 3.0
                 INVOKESTATIC java/lang/Double.valueOf (D)Ljava/lang/Double;
-                LDC "3"
+                LDC "2"
                 INVOKESTATIC Test_js.myFunction (Ljava/lang/Object;Ljava/lang/Object;)V
                 LDC "4"
                 INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
@@ -114,8 +132,9 @@ class BytecodeConverterTest {
                 RETURN
                 MAXSTACK = 2
                 MAXLOCALS = 0
-            }""".trimIndent(),
-            stringWriter.toString().trimEnd()
+            }
+            """.trimIndent(),
+            stringWriter.toString()
         )
 
     }

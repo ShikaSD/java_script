@@ -27,6 +27,9 @@ interface HirVisitor<ContextType, DataType> {
     fun visitHirReference(hirReference: HirReference, data: ContextType) =
         visitHirExpression(hirReference, data)
 
+    fun visitHirObjectExpression(hirObjectExpression: HirObjectExpression, data: ContextType) =
+        visitHirExpression(hirObjectExpression, data)
+
     fun visitHirCall(hirCall: HirCall, data: ContextType) =
         visitHirExpression(hirCall, data)
 }

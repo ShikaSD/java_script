@@ -70,6 +70,7 @@ DoubleQuote = [\"]
 <YYINITIAL> "}"        { return JsToken.RBRACE; }
 <YYINITIAL> "="        { return JsToken.EQ; }
 <YYINITIAL> ";"        { return JsToken.SEMICOLON; }
+<YYINITIAL> ":"        { return JsToken.COLON; }
 <YYINITIAL> ","        { return JsToken.COMMA; }
 <YYINITIAL> "."        { return JsToken.DOT; }
 

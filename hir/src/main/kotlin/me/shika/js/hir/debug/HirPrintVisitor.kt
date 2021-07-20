@@ -6,6 +6,7 @@ import me.shika.js.hir.elements.HirConst
 import me.shika.js.hir.elements.HirElement
 import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
+import me.shika.js.hir.elements.HirObjectExpression
 import me.shika.js.hir.elements.HirParameter
 import me.shika.js.hir.elements.HirReference
 import me.shika.js.hir.elements.HirVariable
@@ -79,6 +80,21 @@ class HirPrintVisitor : HirVisitor<StringBuilder, Unit> {
 
         withIndent {
             super.visitHirReference(hirReference, data)
+        }
+    }
+
+    override fun visitHirObjectExpression(hirObjectExpression: HirObjectExpression, data: StringBuilder) {
+        data.indentedLine("OBJECT:")
+
+        withIndent {
+            for (entry in hirObjectExpression.entries) {
+                data.indentedLine("KEY: ${entry.key}")
+                data.indentedLine("VALUE:")
+
+                withIndent {
+                    entry.value.accept(this, data)
+                }
+            }
         }
     }
 

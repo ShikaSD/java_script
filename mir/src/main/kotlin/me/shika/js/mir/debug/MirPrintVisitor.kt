@@ -6,6 +6,7 @@ import me.shika.js.mir.elements.MirConst
 import me.shika.js.mir.elements.MirElement
 import me.shika.js.mir.elements.MirFile
 import me.shika.js.mir.elements.MirFunction
+import me.shika.js.mir.elements.MirObjectExpression
 import me.shika.js.mir.elements.MirParameter
 import me.shika.js.mir.elements.MirReference
 import me.shika.js.mir.elements.MirSymbol
@@ -80,6 +81,21 @@ class MirPrintVisitor : MirVisitor<StringBuilder> {
 
         withIndent {
             super.visitMirReference(reference, data)
+        }
+    }
+
+    override fun visitMirObjectExpression(objectExpression: MirObjectExpression, data: StringBuilder) {
+        data.indentedLine("OBJECT:")
+
+        withIndent {
+            for (entry in objectExpression.entries) {
+                data.indentedLine("KEY: ${entry.key}")
+                data.indentedLine("VALUE:")
+
+                withIndent {
+                    entry.value.accept(this, data)
+                }
+            }
         }
     }
 

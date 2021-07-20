@@ -49,21 +49,30 @@ class MirConverterTest {
 
         assertEquals("""
             FILE name: Test.js
-              FUNCTION name: myFunction
+              FUNCTION name: name
                 PARAMETER name: param1
                 PARAMETER name: param2
                 BODY
                   VAR name: hello
-                    CONST: Str(value="value")
+                    CONST: Str(value=value)
+                  VAR name: test
+                    OBJECT:
+                      KEY: key
+                      VALUE:
+                        REF: variable hello
+                      KEY: secondKey
+                      VALUE:
+                        OBJECT:
+                          KEY: nestedKey
+                          VALUE:
+                            CONST: Str(value=nestedValue)
                   CALL: function print
                     REF: variable hello
-                    REF: parameter param1
-                    REF: parameter param2
-              CALL: function myFunction
-                CONST: Number(value=0.1)
-                CONST: Str(value="")
-                CONST: Str(value="")
-                CONST: Str(value="")
+              CALL: function name
+                CONST: Number(value=0.6)
+                CONST: Str(value=)
+                CONST: Str(value=)
+                CONST: Str(value=)
         """.trimIndent(),
             mirFile.dump().trimEnd()
         )

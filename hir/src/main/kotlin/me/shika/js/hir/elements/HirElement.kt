@@ -79,8 +79,6 @@ class HirVariable(val name: String, val value: HirExpression?, override val sour
 interface HirExpression : HirElement
 
 class HirConst(val value: ConstValue, override val source: SourceOffset = NO_SOURCE) : HirExpression {
-
-
     override fun <Context, Data> accept(visitor: HirVisitor<Context, Data>, data: Context) =
         visitor.visitHirConst(this, data)
 
@@ -97,6 +95,17 @@ class HirReference(val name: String, override val source: SourceOffset = NO_SOUR
 
     override fun <Context, Data> acceptChildren(visitor: HirVisitor<Context, Data>, data: Context) {
         // no-op
+    }
+}
+
+class HirObjectExpression(val entries: Map<String, HirExpression>, override val source: SourceOffset) : HirExpression {
+    override fun <Context, Data> accept(visitor: HirVisitor<Context, Data>, data: Context) =
+        visitor.visitHirObjectExpression(this, data)
+
+    override fun <Context, Data> acceptChildren(visitor: HirVisitor<Context, Data>, data: Context) {
+        entries.values.forEach {
+            it.accept(visitor, data)
+        }
     }
 }
 
