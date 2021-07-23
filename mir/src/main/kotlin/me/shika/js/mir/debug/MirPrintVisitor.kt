@@ -6,9 +6,10 @@ import me.shika.js.mir.elements.MirConst
 import me.shika.js.mir.elements.MirElement
 import me.shika.js.mir.elements.MirFile
 import me.shika.js.mir.elements.MirFunction
+import me.shika.js.mir.elements.MirGetValue
 import me.shika.js.mir.elements.MirObjectExpression
 import me.shika.js.mir.elements.MirParameter
-import me.shika.js.mir.elements.MirReference
+import me.shika.js.mir.elements.MirSetValue
 import me.shika.js.mir.elements.MirSymbol
 import me.shika.js.mir.elements.MirVariable
 import me.shika.js.mir.elements.MirVisitor
@@ -76,11 +77,19 @@ class MirPrintVisitor : MirVisitor<StringBuilder> {
         }
     }
 
-    override fun visitMirReference(reference: MirReference, data: StringBuilder) {
-        data.indentedLine("REF: ${reference.symbol.dump()}")
+    override fun visitMirGetValue(getValue: MirGetValue, data: StringBuilder) {
+        data.indentedLine("GET: ${getValue.symbol.dump()}")
 
         withIndent {
-            super.visitMirReference(reference, data)
+            super.visitMirGetValue(getValue, data)
+        }
+    }
+
+    override fun visitMirSetValue(setValue: MirSetValue, data: StringBuilder) {
+        data.indentedLine("SET: ${setValue.symbol.dump()}")
+
+        withIndent {
+            super.visitMirSetValue(setValue, data)
         }
     }
 

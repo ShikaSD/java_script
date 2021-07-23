@@ -57,15 +57,18 @@ class HirConverterTest {
                     OBJECT:
                       KEY: key
                       VALUE:
-                        REF: <unresolved hello>
+                        GET: <unresolved hello>
                       KEY: secondKey
                       VALUE:
                         OBJECT:
                           KEY: nestedKey
                           VALUE:
                             CONST: Str(value=nestedValue)
+                  SET: <unresolved test>
+                    SET: <unresolved hello>
+                      GET: <unresolved test>
                   CALL: <unresolved print>
-                    REF: <unresolved hello>
+                    GET: <unresolved hello>
               CALL: <unresolved name>
                 CONST: Number(value=0.6)
                 CONST: Str(value=)
@@ -98,15 +101,18 @@ class HirConverterTest {
                     OBJECT:
                       KEY: key
                       VALUE:
-                        REF: variable hello
+                        GET: variable hello
                       KEY: secondKey
                       VALUE:
                         OBJECT:
                           KEY: nestedKey
                           VALUE:
                             CONST: Str(value=nestedValue)
+                  SET: variable test
+                    SET: variable hello
+                      GET: variable test
                   CALL: function print
-                    REF: variable hello
+                    GET: variable hello
               CALL: function name
                 CONST: Number(value=0.6)
                 CONST: Str(value=)

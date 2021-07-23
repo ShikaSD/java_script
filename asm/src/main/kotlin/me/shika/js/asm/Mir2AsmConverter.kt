@@ -11,10 +11,11 @@ import me.shika.js.mir.elements.MirElementWithParent
 import me.shika.js.mir.elements.MirExpression
 import me.shika.js.mir.elements.MirFile
 import me.shika.js.mir.elements.MirFunction
+import me.shika.js.mir.elements.MirGetValue
 import me.shika.js.mir.elements.MirObjectExpression
 import me.shika.js.mir.elements.MirParameter
 import me.shika.js.mir.elements.MirParameterSymbol
-import me.shika.js.mir.elements.MirReference
+import me.shika.js.mir.elements.MirSetValue
 import me.shika.js.mir.elements.MirSymbol
 import me.shika.js.mir.elements.MirVariable
 import me.shika.js.mir.elements.MirVariableSymbol
@@ -201,11 +202,11 @@ class Mir2AsmConverter {
             }
         }
 
-        override fun visitMirReference(reference: MirReference, data: MethodVisitor) {
-            val symbol = reference.symbol
+        override fun visitMirGetValue(getValue: MirGetValue, data: MethodVisitor) {
+            val symbol = getValue.symbol
 
             require(symbol is MirVariableSymbol || symbol is MirParameterSymbol) {
-                "Can only reference variables and parameters, found ${reference.dump()}"
+                "Can only reference variables and parameters, found ${getValue.dump()}"
             }
 
             if (symbol.owner is MirElementWithParent) {
@@ -224,10 +225,42 @@ class Mir2AsmConverter {
 
             val index = frameMap.localIndex(symbol)
             if (index == -1) {
-                "Could not find ${reference.dump()} in the frame map"
+                "Could not find ${getValue.dump()} in the frame map"
             }
 
             data.visitVarInsn(ALOAD, index)
+        }
+
+        override fun visitMirSetValue(setValue: MirSetValue, data: MethodVisitor) {
+            val symbol = setValue.symbol
+
+            require(symbol is MirVariableSymbol) {
+                "Can only set value to variables, found ${setValue.dump()}"
+            }
+
+            // put value on stack
+            setValue.value.accept(this, data)
+            // leave it on the stack after assignment
+            data.visitInsn(DUP)
+
+            val parent = (symbol.owner as MirElementWithParent).parent
+            if (parent is MirFile) {
+                // top of the file, use putstatic instead
+                data.visitFieldInsn(
+                    PUTSTATIC,
+                    parent.className(),
+                    symbol.owner.name,
+                    JOBJECT_SIGNATURE
+                )
+                return
+            }
+
+            val index = frameMap.localIndex(symbol)
+            if (index == -1) {
+                "Could not find ${setValue.dump()} in the frame map"
+            }
+
+            data.visitVarInsn(ASTORE, index)
         }
 
         override fun visitMirCall(call: MirCall, data: MethodVisitor) {

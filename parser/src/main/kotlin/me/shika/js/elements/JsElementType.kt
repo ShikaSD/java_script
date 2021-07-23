@@ -16,6 +16,8 @@ class JsElementType(debugName: String) : IElementType(debugName, JsLanguage) {
 
         val CALL = jsElement("CALL")
         val DOT_CALL = jsElement("DOT_CALL")
+        val ASSIGNMENT = jsElement("ASSIGNMENT")
+        val ASSIGNMENT_VALUE = jsElement("ASSIGNMENT_VALUE")
 
         val PARAMETER = jsElement("PARAMETER")
         val ARGUMENT = jsElement("ARGUMENT")

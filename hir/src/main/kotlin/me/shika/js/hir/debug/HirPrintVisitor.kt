@@ -6,9 +6,10 @@ import me.shika.js.hir.elements.HirConst
 import me.shika.js.hir.elements.HirElement
 import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
+import me.shika.js.hir.elements.HirGetValue
 import me.shika.js.hir.elements.HirObjectExpression
 import me.shika.js.hir.elements.HirParameter
-import me.shika.js.hir.elements.HirReference
+import me.shika.js.hir.elements.HirSetValue
 import me.shika.js.hir.elements.HirVariable
 import me.shika.js.hir.elements.HirVisitor
 
@@ -75,11 +76,19 @@ class HirPrintVisitor : HirVisitor<StringBuilder, Unit> {
         }
     }
 
-    override fun visitHirReference(hirReference: HirReference, data: StringBuilder) {
-        data.indentedLine("REF: ${hirReference.candidate?.dumpShallow() ?: "<unresolved ${hirReference.name}>"}")
+    override fun visitHirGetValue(hirGetValue: HirGetValue, data: StringBuilder) {
+        data.indentedLine("GET: ${hirGetValue.candidate?.dumpShallow() ?: "<unresolved ${hirGetValue.name}>"}")
 
         withIndent {
-            super.visitHirReference(hirReference, data)
+            super.visitHirGetValue(hirGetValue, data)
+        }
+    }
+
+    override fun visitHirSetValue(hirSetValue: HirSetValue, data: StringBuilder) {
+        data.indentedLine("SET: ${hirSetValue.candidate?.dumpShallow() ?: "<unresolved ${hirSetValue.name}>"}")
+
+        withIndent {
+            super.visitHirSetValue(hirSetValue, data)
         }
     }
 

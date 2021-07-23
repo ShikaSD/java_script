@@ -5,8 +5,9 @@ function name(param1, param2) {
         secondKey: {
             nestedKey: "nestedValue"
         }
-    }
-    print(hello)
+    };
+    hello = test = "result";
+    print(hello);
 }
 
-name(0.6, "", "", "")
+name(0.6, "", "", "");

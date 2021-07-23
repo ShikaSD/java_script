@@ -117,13 +117,27 @@ class MirConst(val value: ConstValue, override val source: SourceOffset = Source
     }
 }
 
-class MirReference(val symbol: MirSymbol<*>, override val source: SourceOffset = SourceOffset.NO_SOURCE) : MirExpression {
+class MirGetValue(val symbol: MirSymbol<*>, override val source: SourceOffset = SourceOffset.NO_SOURCE) : MirExpression {
     override fun <Context> accept(visitor: MirVisitor<Context>, data: Context) {
-        visitor.visitMirReference(this, data)
+        visitor.visitMirGetValue(this, data)
     }
 
     override fun <Context> acceptChildren(visitor: MirVisitor<Context>, data: Context) {
         // no-op
+    }
+}
+
+class MirSetValue(
+    val symbol: MirSymbol<*>,
+    val value: MirExpression,
+    override val source: SourceOffset = SourceOffset.NO_SOURCE
+) : MirExpression {
+    override fun <Context> accept(visitor: MirVisitor<Context>, data: Context) {
+        visitor.visitMirSetValue(this, data)
+    }
+
+    override fun <Context> acceptChildren(visitor: MirVisitor<Context>, data: Context) {
+        value.accept(visitor, data)
     }
 }
 

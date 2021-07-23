@@ -5,8 +5,9 @@ import me.shika.js.hir.elements.HirCall
 import me.shika.js.hir.elements.HirElement
 import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
+import me.shika.js.hir.elements.HirGetValue
 import me.shika.js.hir.elements.HirParameter
-import me.shika.js.hir.elements.HirReference
+import me.shika.js.hir.elements.HirSetValue
 import me.shika.js.hir.elements.HirVariable
 import me.shika.js.hir.elements.HirVisitor
 import me.shika.js.hir.elements.functions
@@ -39,14 +40,24 @@ class HirReferenceResolver(private val errorReporter: HirErrorReporter) : HirVis
         scope.addElement(hirVariable.name, hirVariable) // we cannot reference variable in its initializer
     }
 
-    override fun visitHirReference(hirReference: HirReference, scope: Scope) {
-        val referent = scope.named(hirReference.name)
+    override fun visitHirGetValue(hirGetValue: HirGetValue, scope: Scope) {
+        val referent = scope.named(hirGetValue.name)
         if (referent == null) {
-            errorReporter.reportError("Unknown reference to ${hirReference.name}", hirReference.source)
+            errorReporter.reportError("Unknown reference to ${hirGetValue.name}", hirGetValue.source)
         }
 
-        hirReference.candidate = referent
-        super.visitHirReference(hirReference, scope)
+        hirGetValue.candidate = referent
+        super.visitHirGetValue(hirGetValue, scope)
+    }
+
+    override fun visitHirSetValue(hirSetValue: HirSetValue, scope: Scope) {
+        val referent = scope.named(hirSetValue.name)
+        if (referent == null) {
+            errorReporter.reportError("Unknown reference to ${hirSetValue.name}", hirSetValue.source)
+        }
+
+        hirSetValue.candidate = referent
+        super.visitHirSetValue(hirSetValue, scope)
     }
 
     override fun visitHirCall(hirCall: HirCall, scope: Scope) {

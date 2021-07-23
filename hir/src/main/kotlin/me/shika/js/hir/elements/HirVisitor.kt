@@ -24,12 +24,15 @@ interface HirVisitor<ContextType, DataType> {
     fun visitHirConst(hirConst: HirConst, data: ContextType) =
         visitHirExpression(hirConst, data)
 
-    fun visitHirReference(hirReference: HirReference, data: ContextType) =
-        visitHirExpression(hirReference, data)
+    fun visitHirGetValue(hirGetValue: HirGetValue, data: ContextType) =
+        visitHirExpression(hirGetValue, data)
 
     fun visitHirObjectExpression(hirObjectExpression: HirObjectExpression, data: ContextType) =
         visitHirExpression(hirObjectExpression, data)
 
     fun visitHirCall(hirCall: HirCall, data: ContextType) =
         visitHirExpression(hirCall, data)
+
+    fun visitHirSetValue(hirSetValue: HirSetValue, data: ContextType) =
+        visitHirExpression(hirSetValue, data)
 }

@@ -68,20 +68,11 @@ class BytecodeConverterTest {
             public class Test_js {
             
             
-              // access flags 0x9
-              public static Ljava/lang/Object; element
-            
               // access flags 0x19
-              public final static myFunction(Ljava/lang/Object;Ljava/lang/Object;)V
+              public final static name(Ljava/lang/Object;Ljava/lang/Object;)V
                L0
-                LDC "1"
+                LDC "value"
                 ASTORE 2
-                ALOAD 2
-                INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
-                ALOAD 1
-                INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
-                ALOAD 0
-                INVOKESTATIC Test_js.anotherFunction (Ljava/lang/Object;)V
                 NEW js/JsObject
                 DUP
                 INVOKESPECIAL js/JsObject.<init> ()V
@@ -99,42 +90,34 @@ class BytecodeConverterTest {
                 LDC "nestedValue"
                 INVOKEVIRTUAL js/JsObject.add (Ljava/lang/String;Ljava/lang/Object;)V
                 INVOKEVIRTUAL js/JsObject.add (Ljava/lang/String;Ljava/lang/Object;)V
-                INVOKESTATIC Test_js.anotherFunction (Ljava/lang/Object;)V
+                ASTORE 3
+                ALOAD 3
+                DUP
+                ASTORE 2
+                DUP
+                ASTORE 3
+                ALOAD 2
+                INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
                 RETURN
                 LOCALVARIABLE param1 Ljava/lang/Object; L0 L0 0
                 LOCALVARIABLE param2 Ljava/lang/Object; L0 L0 1
                 LOCALVARIABLE hello Ljava/lang/Object; L0 L0 2
+                LOCALVARIABLE test Ljava/lang/Object; L0 L0 3
                 MAXSTACK = 7
-                MAXLOCALS = 3
-            
-              // access flags 0x19
-              public final static anotherFunction(Ljava/lang/Object;)V
-               L0
-                ALOAD 0
-                INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
-                RETURN
-                LOCALVARIABLE param Ljava/lang/Object; L0 L0 0
-                MAXSTACK = 1
-                MAXLOCALS = 1
+                MAXLOCALS = 4
             
               // access flags 0x8
               static <clinit>()V
-                LDC "5"
-                PUTSTATIC Test_js.element : Ljava/lang/Object;
-                LDC 3.0
+                LDC 0.6
                 INVOKESTATIC java/lang/Double.valueOf (D)Ljava/lang/Double;
-                LDC "2"
-                INVOKESTATIC Test_js.myFunction (Ljava/lang/Object;Ljava/lang/Object;)V
-                LDC "4"
-                INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
-                GETSTATIC Test_js.element : Ljava/lang/Object;
-                INVOKESTATIC js/ConsoleKt.print (Ljava/lang/Object;)V
+                LDC ""
+                INVOKESTATIC Test_js.name (Ljava/lang/Object;Ljava/lang/Object;)V
                 RETURN
                 MAXSTACK = 2
                 MAXLOCALS = 0
             }
             """.trimIndent(),
-            stringWriter.toString()
+            stringWriter.toString().trimEnd()
         )
 
     }

@@ -1,9 +1,5 @@
 package js
 
-fun test() {
-    JsObject().add("test", 0)
-}
-
 class JsObject {
     private val storage = mutableMapOf<String, Any?>()
 

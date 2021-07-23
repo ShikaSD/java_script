@@ -12,13 +12,21 @@ import me.shika.js.SourceOffset
 import me.shika.js.elements.JsElementType
 import me.shika.js.elements.JsElementType.Companion.ARGUMENT
 import me.shika.js.elements.JsElementType.Companion.ARGUMENT_LIST
+import me.shika.js.elements.JsElementType.Companion.ASSIGNMENT
+import me.shika.js.elements.JsElementType.Companion.ASSIGNMENT_VALUE
 import me.shika.js.elements.JsElementType.Companion.BLOCK
+import me.shika.js.elements.JsElementType.Companion.BOOLEAN_CONSTANT
+import me.shika.js.elements.JsElementType.Companion.CALL
 import me.shika.js.elements.JsElementType.Companion.FUNCTION
+import me.shika.js.elements.JsElementType.Companion.NUMBER_CONSTANT
+import me.shika.js.elements.JsElementType.Companion.OBJECT
 import me.shika.js.elements.JsElementType.Companion.OBJECT_CLAUSE
 import me.shika.js.elements.JsElementType.Companion.OBJECT_KEY
 import me.shika.js.elements.JsElementType.Companion.OBJECT_VALUE
 import me.shika.js.elements.JsElementType.Companion.PARAMETER
 import me.shika.js.elements.JsElementType.Companion.PARAMETER_LIST
+import me.shika.js.elements.JsElementType.Companion.REFERENCE
+import me.shika.js.elements.JsElementType.Companion.STRING_CONSTANT
 import me.shika.js.elements.JsElementType.Companion.VARIABLE
 import me.shika.js.hir.elements.HirBody
 import me.shika.js.hir.elements.HirCall
@@ -27,11 +35,13 @@ import me.shika.js.hir.elements.HirElement
 import me.shika.js.hir.elements.HirExpression
 import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
+import me.shika.js.hir.elements.HirGetValue
 import me.shika.js.hir.elements.HirObjectExpression
 import me.shika.js.hir.elements.HirParameter
-import me.shika.js.hir.elements.HirReference
+import me.shika.js.hir.elements.HirSetValue
 import me.shika.js.hir.elements.HirVariable
 import me.shika.js.lexer.JsToken
+import me.shika.js.lexer.JsToken.Companion.SEMICOLON
 import me.shika.js.lexer.JsToken.Companion.WHITESPACE
 
 private typealias ASTTree = FlyweightCapableTreeStructure<LighterASTNode>
@@ -49,6 +59,7 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
         when (astNode.tokenType) {
             FUNCTION -> convertFunction(astNode)
             VARIABLE -> convertVariable(astNode)
+            SEMICOLON, // fixme: cheating here
             WHITESPACE -> null
             else -> convertExpression(astNode)
         }
@@ -120,15 +131,16 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
 
     private fun convertExpression(astNode: LighterASTNode): HirExpression? =
         when (astNode.tokenType) {
-            JsElementType.STRING_CONSTANT ->
+            STRING_CONSTANT ->
                 HirConst(Str(astNode.toString().trim { it == '"' }), astNode.sourceOffset)
-            JsElementType.NUMBER_CONSTANT ->
+            NUMBER_CONSTANT ->
                 HirConst(Number(astNode.toString().toDouble()), astNode.sourceOffset)
-            JsElementType.BOOLEAN_CONSTANT ->
+            BOOLEAN_CONSTANT ->
                 HirConst(Bool(astNode.toString().toBooleanStrict()), astNode.sourceOffset)
-            JsElementType.REFERENCE -> convertReference(astNode)
-            JsElementType.CALL -> convertCall(astNode)
-            JsElementType.OBJECT -> convertObjectExpression(astNode)
+            REFERENCE -> convertGetValue(astNode)
+            CALL -> convertCall(astNode)
+            OBJECT -> convertObjectExpression(astNode)
+            ASSIGNMENT -> convertSetValue(astNode)
             BAD_CHARACTER -> {
                 errorReporter.reportError(
                     "Found bad character",
@@ -141,14 +153,14 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
             }
         }
 
-    private fun convertReference(astNode: LighterASTNode): HirReference =
-        HirReference(
+    private fun convertGetValue(astNode: LighterASTNode): HirGetValue =
+        HirGetValue(
             name = astNode.toString(),
             source = astNode.sourceOffset
         )
 
     private fun convertCall(astNode: LighterASTNode): HirCall {
-        val name = astNode.findOfType(JsElementType.REFERENCE)
+        val name = astNode.findOfType(REFERENCE)
         val arguments = convertArgumentList(astNode.findOfType(ARGUMENT_LIST)!!)
 
         return HirCall(
@@ -189,6 +201,14 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
         }
 
         return HirObjectExpression(entries, astNode.sourceOffset)
+    }
+
+    private fun convertSetValue(astNode: LighterASTNode): HirSetValue {
+        val name = astNode.findOfType(REFERENCE).toString()
+
+        // fixme: error handling with !! is not fun
+        val expression = convertExpression(astNode.findOfType(ASSIGNMENT_VALUE)!!.firstChild()!!)
+        return HirSetValue(name, expression!!)
     }
 
     private val LighterASTNode.sourceOffset get() = SourceOffset(startOffset, endOffset)

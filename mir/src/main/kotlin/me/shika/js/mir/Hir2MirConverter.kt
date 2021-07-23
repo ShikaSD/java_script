@@ -8,9 +8,10 @@ import me.shika.js.hir.elements.HirElement
 import me.shika.js.hir.elements.HirExpression
 import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
+import me.shika.js.hir.elements.HirGetValue
 import me.shika.js.hir.elements.HirObjectExpression
 import me.shika.js.hir.elements.HirParameter
-import me.shika.js.hir.elements.HirReference
+import me.shika.js.hir.elements.HirSetValue
 import me.shika.js.hir.elements.HirVariable
 import me.shika.js.hir.elements.HirVisitor
 import me.shika.js.hir.elements.functions
@@ -23,9 +24,10 @@ import me.shika.js.mir.elements.MirExpression
 import me.shika.js.mir.elements.MirFile
 import me.shika.js.mir.elements.MirFunction
 import me.shika.js.mir.elements.MirFunctionSymbol
+import me.shika.js.mir.elements.MirGetValue
 import me.shika.js.mir.elements.MirObjectExpression
 import me.shika.js.mir.elements.MirParameter
-import me.shika.js.mir.elements.MirReference
+import me.shika.js.mir.elements.MirSetValue
 import me.shika.js.mir.elements.MirVariable
 import me.shika.js.mir.elements.MirVisitor
 
@@ -104,10 +106,17 @@ class Hir2MirConverter {
                 source = hirCall.source
             )
 
-        override fun visitHirReference(hirReference: HirReference, data: Nothing?): MirReference =
-            MirReference(
-                symbol = symbolTable.referenceSymbol(hirReference.candidate!!),
-                source = hirReference.source
+        override fun visitHirGetValue(hirGetValue: HirGetValue, data: Nothing?): MirGetValue =
+            MirGetValue(
+                symbol = symbolTable.referenceSymbol(hirGetValue.candidate!!),
+                source = hirGetValue.source
+            )
+
+        override fun visitHirSetValue(hirSetValue: HirSetValue, data: Nothing?): MirSetValue =
+            MirSetValue(
+                symbol = symbolTable.referenceSymbol(hirSetValue.candidate!!),
+                value = hirSetValue.argument.accept(this, null) as MirExpression,
+                source = hirSetValue.source
             )
 
         override fun visitHirObjectExpression(hirObjectExpression: HirObjectExpression, data: Nothing?): MirObjectExpression =

@@ -8,6 +8,7 @@ import com.intellij.psi.tree.TokenSet
 import me.shika.js.elements.JsElementType
 import me.shika.js.elements.JsElementType.Companion.ARGUMENT
 import me.shika.js.elements.JsElementType.Companion.ARGUMENT_LIST
+import me.shika.js.elements.JsElementType.Companion.ASSIGNMENT_VALUE
 import me.shika.js.elements.JsElementType.Companion.BLOCK
 import me.shika.js.elements.JsElementType.Companion.BOOLEAN_CONSTANT
 import me.shika.js.elements.JsElementType.Companion.FILE
@@ -66,10 +67,16 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
     private fun parseStatement() {
         skipSpace()
 
-        if (parseExpression()) {
-            // todo
-        } else if (!parseDeclaration()) {
-            error("Failed to parse statement", recovery = TokenSet.create(WHITESPACE, SEMICOLON))
+        when {
+            parseDeclaration() -> {
+                // no-op
+            }
+            parseExpression() -> {
+                expect(SEMICOLON, "Expected semicolon after the statement", advance = true)
+            }
+            else -> {
+                error("Failed to parse statement", recovery = TokenSet.create(WHITESPACE, SEMICOLON))
+            }
         }
 
         skipSpace()
@@ -89,6 +96,7 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
 
         if (at(VAR_KEYWORD)) {
             parseVariable()
+            expect(SEMICOLON, "Expected semicolon variable declaration", advance = true)
             return true
         }
 
@@ -125,10 +133,6 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
             } else {
                 argumentMark.done(ARGUMENT)
             }
-        }
-
-        if (at(SEMICOLON)) {
-            advance()
         }
 
         variableMark.done(VARIABLE)
@@ -178,24 +182,42 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
     }
 
     private fun parseExpression(): Boolean {
-        // Basically parses call now
-        val callMark = psiBuilder.mark()
+        val expressionMark = psiBuilder.mark()
 
         val hasAtomic = parseAtomicExpression()
         if (!hasAtomic) {
-            callMark.drop()
+            expressionMark.rollbackTo()
             return false
         }
 
-        if (!at(LPAR)) {
-            callMark.drop()
-            return true
+        when (current()) {
+            LPAR -> {
+                parseArgumentList()
+                expressionMark.done(JsElementType.CALL)
+                return true
+            }
+            EQ -> {
+                advance()
+                val valueMark = psiBuilder.mark()
+                val parsedValue = parseExpression()
+                if (!parsedValue) {
+                    valueMark.drop()
+                    expressionMark.rollbackTo()
+                    expressionMark.drop()
+
+                    error("Couldn't parse value for the assignment")
+
+                    return false
+                }
+                valueMark.done(ASSIGNMENT_VALUE)
+                expressionMark.done(JsElementType.ASSIGNMENT)
+                return true
+            }
+            else -> {
+                expressionMark.drop()
+                return true
+            }
         }
-
-        parseArgumentList()
-        callMark.done(JsElementType.CALL)
-
-        return true
     }
 
     private fun parseArgumentList() {
@@ -235,8 +257,9 @@ class JsParsing(private val psiBuilder: PsiBuilder) {
     private fun parseReference(): Boolean {
         if (at(IDENTIFIER)) {
             val mark = psiBuilder.mark()
-            advance()
+            next()
             mark.done(REFERENCE)
+            skipSpace()
             return true
         }
         return false
