@@ -4,4 +4,4 @@ Here, I am trying to figure out how to compile JS to JVM bytecode (most of the i
 
 Most likely it doesn't work at all, but building it is fun and that's what matters!
 
-See [./asm/src/test/resource/Test.js](./asm/src/test/resource/Test.js) for the closest approximation of what works at the moment.
+See [./asm/src/test/resources/Test.js](./asm/src/test/resources/Test.js) for the closest approximation of what works at the moment.
