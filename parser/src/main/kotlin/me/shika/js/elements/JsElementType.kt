@@ -15,10 +15,9 @@ class JsElementType(debugName: String) : IElementType(debugName, JsLanguage) {
         val BLOCK = jsElement("BLOCK")
 
         val CALL = jsElement("CALL")
-        val MEMBER_REF = jsElement("MEMBER_REF")
-        val MEMBER_REF_VALUE = jsElement("MEMBER_REF_VALUE")
-        val ASSIGNMENT = jsElement("ASSIGNMENT")
-        val ASSIGNMENT_VALUE = jsElement("ASSIGNMENT_VALUE")
+
+        val EXPRESSION = jsElement("EXPRESSION")
+        val EXPRESSION_BINARY_OPERATOR = jsElement("EXPRESSION_BINARY_OPERATOR")
 
         val PARAMETER = jsElement("PARAMETER")
         val ARGUMENT = jsElement("ARGUMENT")

@@ -7,7 +7,7 @@ function name(param1, param2) {
         }
     };
     test.key2 = {};
-    hello = test = "result";
+    (hello = test) = "result";
     print(hello);
 }
 

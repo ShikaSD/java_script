@@ -2,65 +2,85 @@ package me.shika.js.parser
 
 import com.intellij.lang.PsiBuilder
 import me.shika.js.elements.JsElementType
+import me.shika.js.elements.JsElementType.Companion.CALL
+import me.shika.js.elements.JsElementType.Companion.EXPRESSION
+import me.shika.js.elements.JsElementType.Companion.EXPRESSION_BINARY_OPERATOR
 import me.shika.js.lexer.JsToken
+import me.shika.js.lexer.JsToken.Companion.COMMA
+import me.shika.js.lexer.JsToken.Companion.LPAR
+import me.shika.js.lexer.JsToken.Companion.RPAR
 
 /**
  * Expression parser based on [Pratt algorithm](https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html)
  */
 class JsExpressionParser(override val psiBuilder: PsiBuilder) : ParserBase() {
-    fun parseExpression(): Boolean {
-        val expressionMark = psiBuilder.mark()
+    fun parseExpression(): Boolean =
+        parseExpression(0)
 
-        val hasAtomic = parseAtomicExpression()
-        if (!hasAtomic) {
-            expressionMark.rollbackTo()
-            return false
-        }
 
-        when (current()) {
-            JsToken.LPAR -> {
-                parseArgumentList()
-                expressionMark.done(JsElementType.CALL)
-                return true
-            }
-            JsToken.EQ -> {
+    private fun parseExpression(minPrecedence: Int): Boolean {
+        var expressionMark = psiBuilder.mark()
+
+        if (at(LPAR)) {
+            advance()
+            parseExpression(0)
+
+            if (!at(RPAR)) {
+                error("Expected ')'")
+            } else {
                 advance()
-                val valueMark = psiBuilder.mark()
-                val parsedValue = parseExpression()
-                if (!parsedValue) {
-                    valueMark.drop()
-                    expressionMark.drop()
-
-                    error("Couldn't parse value for the assignment")
-
-                    return false
-                }
-                valueMark.done(JsElementType.ASSIGNMENT_VALUE)
-                expressionMark.done(JsElementType.ASSIGNMENT)
-                return true
             }
-            JsToken.DOT -> {
-                advance()
-                val dotMark = psiBuilder.mark()
-                val parsedValue = parseExpression()
-                if (!parsedValue) {
-                    dotMark.drop()
-                    expressionMark.drop()
-
-                    error("Couldn't parse dot access for value")
-
-                    return false
-                }
-
-                dotMark.done(JsElementType.MEMBER_REF_VALUE)
-                expressionMark.done(JsElementType.MEMBER_REF)
-                return true
-            }
-            else -> {
+        } else {
+            val atomic = parseAtomicExpression()
+            if (!atomic) {
                 expressionMark.drop()
-                return true
+                return false
             }
+            expressionMark.done(EXPRESSION)
+            expressionMark = expressionMark.precede()
         }
+
+        while (!eof()) {
+            val currentToken = current()
+            if (at(LPAR)) {
+                // call
+                parseArgumentList()
+                expressionMark.done(CALL)
+                expressionMark = expressionMark.precede()
+                continue
+            }
+
+            val operatorMark = psiBuilder.mark()
+
+            val precedence = binaryPrecedence[currentToken]
+            if (precedence == null) {
+                operatorMark.drop()
+                break
+            }
+
+            val (lp, rp) = precedence
+            if (lp < minPrecedence) {
+                operatorMark.drop()
+                break
+            }
+
+            next()
+            operatorMark.done(EXPRESSION_BINARY_OPERATOR)
+            skipSpace()
+
+            val parsedRhs = parseExpression(rp)
+            if (!parsedRhs) {
+                expressionMark.drop()
+                return false
+            }
+
+            expressionMark.done(EXPRESSION)
+            expressionMark = expressionMark.precede()
+        }
+
+        expressionMark.drop()
+
+        return true
     }
 
     private fun parseAtomicExpression(): Boolean {
@@ -77,11 +97,11 @@ class JsExpressionParser(override val psiBuilder: PsiBuilder) : ParserBase() {
     }
 
     private fun parseArgumentList() {
-        val argumentListMark = startPsiElement(JsToken.LPAR)
+        val argumentListMark = startPsiElement(LPAR)
 
-        while (!at(JsToken.RPAR)) {
+        while (!at(RPAR)) {
             val argumentMark = psiBuilder.mark()
-            val result = parseAtomicExpression()
+            val result = parseExpression()
 
             if (result) {
                 argumentMark.done(JsElementType.ARGUMENT)
@@ -90,12 +110,12 @@ class JsExpressionParser(override val psiBuilder: PsiBuilder) : ParserBase() {
                 advance()
             }
 
-            if (at(JsToken.COMMA)) {
+            if (at(COMMA)) {
                 advance()
             }
         }
 
-        expect(JsToken.RPAR, "Expected \")\" after arguments", advance = true)
+        expect(RPAR, "Expected \")\" after arguments", advance = true)
         argumentListMark.done(JsElementType.ARGUMENT_LIST)
     }
 
@@ -155,7 +175,7 @@ class JsExpressionParser(override val psiBuilder: PsiBuilder) : ParserBase() {
 
             skipSpace()
 
-            if (at(JsToken.COMMA)) {
+            if (at(COMMA)) {
                 advance() // next clause
             } else {
                 if (!at(JsToken.RBRACE)) {
@@ -171,10 +191,17 @@ class JsExpressionParser(override val psiBuilder: PsiBuilder) : ParserBase() {
     }
 
     companion object {
-        private val binaryPrecendence: Map<JsToken, Pair<Int, Int>> =
+        private const val UNSET = -1
+
+        private val binaryPrecedence: Map<JsToken, Pair<Int, Int>> =
             mapOf(
                 JsToken.EQ to Pair(1, 2),
                 JsToken.DOT to Pair(3, 4)
+            )
+
+        private val postfixPrecedence: Map<JsToken, Pair<Int, Int>> =
+            mapOf(
+                LPAR to Pair(5, UNSET)
             )
     }
 }
