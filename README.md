@@ -1,4 +1,4 @@
-# What is better than some bytecode?
+# Psst... wanna try some bytecode?
 
 Here, I am trying to figure out how to compile JS to JVM bytecode (most of the ideas are stolen from Kotlin compiler).
 
