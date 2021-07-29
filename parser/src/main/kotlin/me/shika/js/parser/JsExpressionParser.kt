@@ -42,23 +42,47 @@ class JsExpressionParser(override val psiBuilder: PsiBuilder) : ParserBase() {
 
         while (!eof()) {
             val currentToken = current()
-            if (at(LPAR)) {
-                // call
-                parseArgumentList()
-                expressionMark.done(CALL)
+
+            val postfixPrecedence = postfixPrecedence[currentToken]
+            if (postfixPrecedence != null) {
+                val (lp, _) = postfixPrecedence
+                if (lp < minPrecedence) {
+                    break
+                }
+
+                val expressionType = when (currentToken) {
+                    LPAR -> {
+                        parseArgumentList()
+                        CALL
+                    }
+                    else -> {
+                        null
+                    }
+                }
+
+                if (expressionType == null) {
+                    expressionMark.error("Unknown expression start: $currentToken")
+                    expressionMark = expressionMark.precede()
+                    continue
+                }
+
+                expressionMark.done(expressionType)
                 expressionMark = expressionMark.precede()
+                expressionMark.done(EXPRESSION)
+                expressionMark = expressionMark.precede()
+
                 continue
             }
 
             val operatorMark = psiBuilder.mark()
 
-            val precedence = binaryPrecedence[currentToken]
-            if (precedence == null) {
+            val binaryPrecedence = binaryPrecedence[currentToken]
+            if (binaryPrecedence == null) {
                 operatorMark.drop()
                 break
             }
 
-            val (lp, rp) = precedence
+            val (lp, rp) = binaryPrecedence
             if (lp < minPrecedence) {
                 operatorMark.drop()
                 break
@@ -196,12 +220,12 @@ class JsExpressionParser(override val psiBuilder: PsiBuilder) : ParserBase() {
         private val binaryPrecedence: Map<JsToken, Pair<Int, Int>> =
             mapOf(
                 JsToken.EQ to Pair(1, 2),
-                JsToken.DOT to Pair(3, 4)
+                JsToken.DOT to Pair(5, 6)
             )
 
         private val postfixPrecedence: Map<JsToken, Pair<Int, Int>> =
             mapOf(
-                LPAR to Pair(5, UNSET)
+                LPAR to Pair(3, UNSET)
             )
     }
 }

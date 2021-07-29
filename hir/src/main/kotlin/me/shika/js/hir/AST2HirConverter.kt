@@ -2,7 +2,6 @@ package me.shika.js.hir
 
 import com.intellij.lang.LighterASTNode
 import com.intellij.openapi.util.Ref
-import com.intellij.psi.TokenType.BAD_CHARACTER
 import com.intellij.psi.tree.IElementType
 import com.intellij.util.diff.FlyweightCapableTreeStructure
 import me.shika.js.ConstValue.Bool
@@ -12,11 +11,11 @@ import me.shika.js.SourceOffset
 import me.shika.js.elements.JsElementType
 import me.shika.js.elements.JsElementType.Companion.ARGUMENT
 import me.shika.js.elements.JsElementType.Companion.ARGUMENT_LIST
-import me.shika.js.elements.JsElementType.Companion.ASSIGNMENT
-import me.shika.js.elements.JsElementType.Companion.ASSIGNMENT_VALUE
 import me.shika.js.elements.JsElementType.Companion.BLOCK
 import me.shika.js.elements.JsElementType.Companion.BOOLEAN_CONSTANT
 import me.shika.js.elements.JsElementType.Companion.CALL
+import me.shika.js.elements.JsElementType.Companion.EXPRESSION
+import me.shika.js.elements.JsElementType.Companion.EXPRESSION_BINARY_OPERATOR
 import me.shika.js.elements.JsElementType.Companion.FUNCTION
 import me.shika.js.elements.JsElementType.Companion.NUMBER_CONSTANT
 import me.shika.js.elements.JsElementType.Companion.OBJECT
@@ -35,6 +34,7 @@ import me.shika.js.hir.elements.HirElement
 import me.shika.js.hir.elements.HirExpression
 import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
+import me.shika.js.hir.elements.HirGetProperty
 import me.shika.js.hir.elements.HirGetValue
 import me.shika.js.hir.elements.HirObjectExpression
 import me.shika.js.hir.elements.HirParameter
@@ -59,9 +59,13 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
         when (astNode.tokenType) {
             FUNCTION -> convertFunction(astNode)
             VARIABLE -> convertVariable(astNode)
+            EXPRESSION -> convertExpression(astNode)
             SEMICOLON, // fixme: cheating here
             WHITESPACE -> null
-            else -> convertExpression(astNode)
+            else -> {
+                errorReporter.reportError("Unexpected ${astNode.tokenType}", astNode.sourceOffset)
+                null
+            }
         }
 
     private fun convertFunction(astNode: LighterASTNode): HirFunction {
@@ -129,29 +133,40 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
         )
     }
 
-    private fun convertExpression(astNode: LighterASTNode): HirExpression? =
-        when (astNode.tokenType) {
-            STRING_CONSTANT ->
-                HirConst(Str(astNode.toString().trim { it == '"' }), astNode.sourceOffset)
-            NUMBER_CONSTANT ->
-                HirConst(Number(astNode.toString().toDouble()), astNode.sourceOffset)
-            BOOLEAN_CONSTANT ->
-                HirConst(Bool(astNode.toString().toBooleanStrict()), astNode.sourceOffset)
-            REFERENCE -> convertGetValue(astNode)
-            CALL -> convertCall(astNode)
-            OBJECT -> convertObjectExpression(astNode)
-            ASSIGNMENT -> convertSetValue(astNode)
-            BAD_CHARACTER -> {
-                errorReporter.reportError(
-                    "Found bad character",
-                    astNode.sourceOffset
-                )
-                null
-            }
-            else -> {
-                throw IllegalStateException("Unknown expression: ${astNode.tokenType}")
+    private fun convertExpression(astNode: LighterASTNode): HirExpression? {
+        // binary expression
+        val binaryOperator = astNode.findOfType(EXPRESSION_BINARY_OPERATOR)
+        if (binaryOperator != null) {
+            val operatorToken = binaryOperator.firstChild()?.tokenType
+            return when (operatorToken) {
+                JsToken.EQ -> convertSetValue(astNode)
+                JsToken.DOT -> convertGetProperty(astNode)
+                else -> {
+                    errorReporter.reportError("Unknown ${operatorToken} for binary expression", astNode.sourceOffset)
+                    null
+                }
             }
         }
+
+        // single node expression
+        val expressionValue = astNode.firstChild()
+        if (expressionValue == null) {
+            errorReporter.reportError("Unexpected ${astNode.tokenType}, expected expression", astNode.sourceOffset)
+            return null
+        }
+        return when (expressionValue.tokenType) {
+            STRING_CONSTANT ->
+                HirConst(Str(expressionValue.toString().trim { it == '"' }), astNode.sourceOffset)
+            NUMBER_CONSTANT ->
+                HirConst(Number(expressionValue.toString().toDouble()), astNode.sourceOffset)
+            BOOLEAN_CONSTANT ->
+                HirConst(Bool(expressionValue.toString().toBooleanStrict()), astNode.sourceOffset)
+            REFERENCE -> convertGetValue(expressionValue)
+            OBJECT -> convertObjectExpression(expressionValue)
+            CALL -> convertCall(expressionValue)
+            else -> throw IllegalStateException("Unknown singular token expression ${astNode.tokenType}")
+        }
+    }
 
     private fun convertGetValue(astNode: LighterASTNode): HirGetValue =
         HirGetValue(
@@ -160,11 +175,11 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
         )
 
     private fun convertCall(astNode: LighterASTNode): HirCall {
-        val name = astNode.findOfType(REFERENCE)
+        val receiver = convertExpression(astNode.findOfType(EXPRESSION)!!)
         val arguments = convertArgumentList(astNode.findOfType(ARGUMENT_LIST)!!)
 
         return HirCall(
-            name = name.toString(),
+            receiver = receiver!!,
             arguments = arguments,
             source = astNode.sourceOffset
         )
@@ -204,11 +219,27 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
     }
 
     private fun convertSetValue(astNode: LighterASTNode): HirSetValue {
-        val name = astNode.findOfType(REFERENCE).toString()
+        val children = astNode.getChildren().filter { it?.tokenType == EXPRESSION }
+        require(children.size == 2) { "requires 2 expressions for assignment" }
 
-        // fixme: error handling with !! is not fun
-        val expression = convertExpression(astNode.findOfType(ASSIGNMENT_VALUE)!!.firstChild()!!)
-        return HirSetValue(name, expression!!)
+        val (receiver, value) = children.map {
+            val expression = convertExpression(it!!)
+            require (expression != null) { "Failed to convert expression $it" }
+            expression
+        }
+        return HirSetValue(receiver, value, astNode.sourceOffset)
+    }
+
+    private fun convertGetProperty(astNode: LighterASTNode): HirGetProperty {
+        val children = astNode.getChildren().filter { it?.tokenType == EXPRESSION }
+        require(children.size == 2) { "requires 2 expressions for assignment" }
+
+        val (receiver, property) = children.map { convertExpression(it!!) }
+
+        require(receiver is HirExpression) { "requires receiver to be an expression" }
+        require(property is HirGetValue) { "requires access to be a reference" }
+
+        return HirGetProperty(receiver, children[1].toString(), astNode.sourceOffset)
     }
 
     private val LighterASTNode.sourceOffset get() = SourceOffset(startOffset, endOffset)

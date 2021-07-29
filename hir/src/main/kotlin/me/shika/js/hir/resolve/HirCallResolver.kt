@@ -1,13 +1,11 @@
 package me.shika.js.hir.resolve
 
 import me.shika.js.hir.HirErrorReporter
-import me.shika.js.hir.elements.HirCall
 import me.shika.js.hir.elements.HirElement
 import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
 import me.shika.js.hir.elements.HirGetValue
 import me.shika.js.hir.elements.HirParameter
-import me.shika.js.hir.elements.HirSetValue
 import me.shika.js.hir.elements.HirVariable
 import me.shika.js.hir.elements.HirVisitor
 import me.shika.js.hir.elements.functions
@@ -48,25 +46,5 @@ class HirReferenceResolver(private val errorReporter: HirErrorReporter) : HirVis
 
         hirGetValue.candidate = referent
         super.visitHirGetValue(hirGetValue, scope)
-    }
-
-    override fun visitHirSetValue(hirSetValue: HirSetValue, scope: Scope) {
-        val referent = scope.named(hirSetValue.name)
-        if (referent == null) {
-            errorReporter.reportError("Unknown reference to ${hirSetValue.name}", hirSetValue.source)
-        }
-
-        hirSetValue.candidate = referent
-        super.visitHirSetValue(hirSetValue, scope)
-    }
-
-    override fun visitHirCall(hirCall: HirCall, scope: Scope) {
-        val referent = scope.named(hirCall.name)
-        if (referent == null) {
-            errorReporter.reportError("Unknown call to ${hirCall.name}", hirCall.source)
-        }
-
-        hirCall.candidate = referent
-        super.visitHirCall(hirCall, scope)
     }
 }

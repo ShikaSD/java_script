@@ -98,6 +98,15 @@ class HirGetValue(val name: String, override val source: SourceOffset = NO_SOURC
     }
 }
 
+class HirGetProperty(val receiver: HirExpression, val property: String, override val source: SourceOffset) : HirExpression {
+    override fun <Context, Data> accept(visitor: HirVisitor<Context, Data>, data: Context) =
+        visitor.visitHirGetProperty(this, data)
+
+    override fun <Context, Data> acceptChildren(visitor: HirVisitor<Context, Data>, data: Context) {
+        receiver.accept(visitor, data)
+    }
+}
+
 class HirObjectExpression(val entries: Map<String, HirExpression>, override val source: SourceOffset) : HirExpression {
     override fun <Context, Data> accept(visitor: HirVisitor<Context, Data>, data: Context) =
         visitor.visitHirObjectExpression(this, data)
@@ -110,31 +119,29 @@ class HirObjectExpression(val entries: Map<String, HirExpression>, override val 
 }
 
 class HirSetValue(
-    val name: String,
+    val receiver: HirExpression,
     val argument: HirExpression,
     override val source: SourceOffset = NO_SOURCE
 ) : HirExpression {
-    var candidate: HirElement? = null
-
     override fun <Context, Data> accept(visitor: HirVisitor<Context, Data>, data: Context) =
         visitor.visitHirSetValue(this, data)
 
     override fun <Context, Data> acceptChildren(visitor: HirVisitor<Context, Data>, data: Context) {
+        receiver.accept(visitor, data)
         argument.accept(visitor, data)
     }
 }
 
 class HirCall(
-    val name: String,
+    val receiver: HirExpression,
     val arguments: List<HirExpression?>,
     override val source: SourceOffset = NO_SOURCE
 ) : HirExpression {
-    var candidate: HirElement? = null
-
     override fun <Context, Data> accept(visitor: HirVisitor<Context, Data>, data: Context) =
         visitor.visitHirCall(this, data)
 
     override fun <Context, Data> acceptChildren(visitor: HirVisitor<Context, Data>, data: Context) {
+        receiver.accept(visitor, data)
         arguments.forEach { it?.accept(visitor, data) }
     }
 }

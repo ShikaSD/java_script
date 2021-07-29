@@ -6,6 +6,7 @@ import me.shika.js.hir.elements.HirConst
 import me.shika.js.hir.elements.HirElement
 import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
+import me.shika.js.hir.elements.HirGetProperty
 import me.shika.js.hir.elements.HirGetValue
 import me.shika.js.hir.elements.HirObjectExpression
 import me.shika.js.hir.elements.HirParameter
@@ -61,10 +62,17 @@ class HirPrintVisitor : HirVisitor<StringBuilder, Unit> {
     }
 
     override fun visitHirCall(hirCall: HirCall, data: StringBuilder) {
-        data.indentedLine("CALL: ${hirCall.candidate?.dumpShallow() ?: "<unresolved ${hirCall.name}>"}")
+        data.indentedLine("CALL:")
 
         withIndent {
-            super.visitHirCall(hirCall, data)
+            data.indentedLine("RECEIVER:")
+            withIndent {
+                hirCall.receiver.accept(this, data)
+            }
+            data.indentedLine("ARGUMENTS:")
+            withIndent {
+                hirCall.arguments.forEach { it?.accept(this, data) }
+            }
         }
     }
 
@@ -85,10 +93,28 @@ class HirPrintVisitor : HirVisitor<StringBuilder, Unit> {
     }
 
     override fun visitHirSetValue(hirSetValue: HirSetValue, data: StringBuilder) {
-        data.indentedLine("SET: ${hirSetValue.candidate?.dumpShallow() ?: "<unresolved ${hirSetValue.name}>"}")
+        data.indentedLine("SET:")
 
         withIndent {
-            super.visitHirSetValue(hirSetValue, data)
+            data.indentedLine("RECEIVER:")
+            withIndent {
+                hirSetValue.receiver.accept(this, data)
+            }
+            data.indentedLine("ARGUMENTS:")
+            withIndent {
+                hirSetValue.argument.accept(this, data)
+            }
+        }
+    }
+
+    override fun visitHirGetProperty(hirGetProperty: HirGetProperty, data: StringBuilder) {
+        data.indentedLine("GET_PROP: ${hirGetProperty.property}")
+
+        withIndent {
+            data.indentedLine("RECEIVER:")
+            withIndent {
+                hirGetProperty.receiver.accept(this, data)
+            }
         }
     }
 
