@@ -6,6 +6,7 @@ import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
 import me.shika.js.hir.elements.HirGetValue
 import me.shika.js.hir.elements.HirParameter
+import me.shika.js.hir.elements.HirSetValue
 import me.shika.js.hir.elements.HirVariable
 import me.shika.js.hir.elements.HirVisitor
 import me.shika.js.hir.elements.functions
@@ -46,5 +47,15 @@ class HirReferenceResolver(private val errorReporter: HirErrorReporter) : HirVis
 
         hirGetValue.candidate = referent
         super.visitHirGetValue(hirGetValue, scope)
+    }
+
+    override fun visitHirSetValue(hirSetValue: HirSetValue, scope: Scope) {
+        val referent = scope.named(hirSetValue.name)
+        if (referent == null) {
+            errorReporter.reportError("Unknown reference to ${hirSetValue.name}", hirSetValue.source)
+        }
+
+        hirSetValue.candidate = referent
+        super.visitHirSetValue(hirSetValue, scope)
     }
 }

@@ -79,15 +79,11 @@ class HirConverterTest {
                             RECEIVER:
                               GET: <unresolved test>
                     ARGUMENTS:
-                  SET:
-                    RECEIVER:
-                      SET:
-                        RECEIVER:
-                          GET: <unresolved hello>
-                        VALUE:
-                          GET: <unresolved test>
+                  SET: <unresolved hello>
                     VALUE:
-                      CONST: Str(value=result)
+                      SET: <unresolved test>
+                        VALUE:
+                          CONST: Str(value=result)
                   CALL:
                     RECEIVER:
                       GET: <unresolved print>
@@ -118,7 +114,7 @@ class HirConverterTest {
 
         assertEquals("""
             FILE name: Test.js
-              FUNCTION name:name
+              FUNCTION name: name
                 PARAMETER name: param1
                 PARAMETER name: param2
                 BODY
@@ -150,15 +146,11 @@ class HirConverterTest {
                             RECEIVER:
                               GET: variable test
                     ARGUMENTS:
-                  SET:
-                    RECEIVER:
-                      SET:
-                        RECEIVER:
-                          GET: variable hello
-                        VALUE:
-                          GET: variable test
+                  SET: variable hello
                     VALUE:
-                      CONST: Str(value=result)
+                      SET: variable test
+                        VALUE:
+                          CONST: Str(value=result)
                   CALL:
                     RECEIVER:
                       GET: function print
@@ -171,7 +163,7 @@ class HirConverterTest {
                   CONST: Number(value=0.6)
                   CONST: Str(value=)
                   CONST: Str(value=)
-                  CONST: Str(value=) 
+                  CONST: Str(value=)
         """.trimIndent(),
             hirFile.dump().trimEnd()
         )

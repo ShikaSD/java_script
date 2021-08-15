@@ -8,7 +8,7 @@ function name(param1, param2) {
     };
     test.secondKey.nestedKey = {};
     test.secondKey.nestedKey();
-    (hello = test) = "result";
+    hello = test = "result";
     print(hello);
 }
 

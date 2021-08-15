@@ -132,7 +132,7 @@ class Hir2MirConverter {
 
         override fun visitHirSetValue(hirSetValue: HirSetValue, data: Nothing?): MirSetValue =
             MirSetValue(
-                receiver = hirSetValue.receiver.mir(),
+                symbol = symbolTable.referenceSymbol(hirSetValue.candidate!!),
                 value = hirSetValue.value.mir(),
                 source = hirSetValue.source
             )

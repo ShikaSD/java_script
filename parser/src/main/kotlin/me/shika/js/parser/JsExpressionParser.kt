@@ -219,7 +219,7 @@ class JsExpressionParser(override val psiBuilder: PsiBuilder) : ParserBase() {
 
         private val binaryPrecedence: Map<JsToken, Pair<Int, Int>> =
             mapOf(
-                JsToken.EQ to Pair(1, 2),
+                JsToken.EQ to Pair(2, 1),
                 JsToken.DOT to Pair(5, 6)
             )
 

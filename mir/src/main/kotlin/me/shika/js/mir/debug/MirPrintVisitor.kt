@@ -88,7 +88,7 @@ class MirPrintVisitor : MirVisitor<StringBuilder> {
     }
 
     override fun visitMirSetValue(setValue: MirSetValue, data: StringBuilder) {
-        data.indentedLine("SET:")
+        data.indentedLine("SET: ${setValue.symbol.dump()}")
 
         withIndent {
             super.visitMirSetValue(setValue, data)

@@ -119,15 +119,16 @@ class HirObjectExpression(val entries: Map<String, HirExpression>, override val 
 }
 
 class HirSetValue(
-    val receiver: HirExpression,
+    val name: String,
     val value: HirExpression,
     override val source: SourceOffset = NO_SOURCE
 ) : HirExpression {
+    var candidate: HirElement? = null
+
     override fun <Context, Data> accept(visitor: HirVisitor<Context, Data>, data: Context) =
         visitor.visitHirSetValue(this, data)
 
     override fun <Context, Data> acceptChildren(visitor: HirVisitor<Context, Data>, data: Context) {
-        receiver.accept(visitor, data)
         value.accept(visitor, data)
     }
 }

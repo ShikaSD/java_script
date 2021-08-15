@@ -128,7 +128,7 @@ class MirGetValue(val symbol: MirSymbol<*>, override val source: SourceOffset = 
 }
 
 class MirSetValue(
-    val receiver: MirExpression,
+    val symbol: MirSymbol<*>,
     val value: MirExpression,
     override val source: SourceOffset = SourceOffset.NO_SOURCE
 ) : MirExpression {
@@ -137,7 +137,6 @@ class MirSetValue(
     }
 
     override fun <Context> acceptChildren(visitor: MirVisitor<Context>, data: Context) {
-        receiver.accept(visitor, data)
         value.accept(visitor, data)
     }
 }

@@ -219,7 +219,7 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
         return HirObjectExpression(entries, astNode.sourceOffset)
     }
 
-    private fun convertSetValue(astNode: LighterASTNode): HirExpression {
+    private fun convertSetValue(astNode: LighterASTNode): HirExpression? {
         val children = astNode.getChildren().filter { it?.tokenType == EXPRESSION }
         require(children.size == 2) { "requires 2 expressions for assignment" }
 
@@ -237,7 +237,15 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
                 source = astNode.sourceOffset
             )
         } else {
-            HirSetValue(receiver, value, astNode.sourceOffset)
+            if (receiver !is HirGetValue) {
+                errorReporter.reportError("Invalid left hand side of assignment", receiver.source)
+                return null
+            }
+            HirSetValue(
+                receiver.name,
+                value,
+                astNode.sourceOffset
+            )
         }
     }
 

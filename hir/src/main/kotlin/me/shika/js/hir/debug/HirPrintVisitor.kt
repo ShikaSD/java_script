@@ -94,13 +94,9 @@ class HirPrintVisitor : HirVisitor<StringBuilder, Unit> {
     }
 
     override fun visitHirSetValue(hirSetValue: HirSetValue, data: StringBuilder) {
-        data.indentedLine("SET:")
+        data.indentedLine("SET: ${hirSetValue.candidate?.dumpShallow() ?: "<unresolved ${hirSetValue.name}>"}")
 
         withIndent {
-            data.indentedLine("RECEIVER:")
-            withIndent {
-                hirSetValue.receiver.accept(this, data)
-            }
             data.indentedLine("VALUE:")
             withIndent {
                 hirSetValue.value.accept(this, data)
