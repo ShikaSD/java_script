@@ -128,7 +128,7 @@ class MirGetValue(val symbol: MirSymbol<*>, override val source: SourceOffset = 
 }
 
 class MirSetValue(
-    val symbol: MirSymbol<*>,
+    val receiver: MirExpression,
     val value: MirExpression,
     override val source: SourceOffset = SourceOffset.NO_SOURCE
 ) : MirExpression {
@@ -137,6 +137,33 @@ class MirSetValue(
     }
 
     override fun <Context> acceptChildren(visitor: MirVisitor<Context>, data: Context) {
+        receiver.accept(visitor, data)
+        value.accept(visitor, data)
+    }
+}
+
+class MirGetProperty(val receiver: MirExpression, val name: String, override val source: SourceOffset) : MirExpression {
+    override fun <Context> accept(visitor: MirVisitor<Context>, data: Context) {
+        visitor.visitMirGetProperty(this, data)
+    }
+
+    override fun <Context> acceptChildren(visitor: MirVisitor<Context>, data: Context) {
+        receiver.accept(visitor, data)
+    }
+}
+
+class MirSetProperty(
+    val receiver: MirExpression,
+    val name: String,
+    val value: MirExpression,
+    override val source: SourceOffset
+) : MirExpression {
+    override fun <Context> accept(visitor: MirVisitor<Context>, data: Context) {
+        visitor.visitMirSetProperty(this, data)
+    }
+
+    override fun <Context> acceptChildren(visitor: MirVisitor<Context>, data: Context) {
+        receiver.accept(visitor, data)
         value.accept(visitor, data)
     }
 }
@@ -157,7 +184,7 @@ class MirObjectExpression(
 }
 
 class MirCall(
-    val symbol: MirFunctionSymbol,
+    val receiver: MirExpression,
     val arguments: List<MirExpression?>,
     override val source: SourceOffset = SourceOffset.NO_SOURCE
 ) : MirExpression {
@@ -166,6 +193,7 @@ class MirCall(
     }
 
     override fun <Context> acceptChildren(visitor: MirVisitor<Context>, data: Context) {
+        receiver.accept(visitor, data)
         arguments.forEach { it?.accept(visitor, data) }
     }
 }

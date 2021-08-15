@@ -38,4 +38,7 @@ interface HirVisitor<ContextType, DataType> {
 
     fun visitHirGetProperty(hirGetProperty: HirGetProperty, data: ContextType) =
         visitHirExpression(hirGetProperty, data)
+
+    fun visitHirSetProperty(hirSetProperty: HirSetProperty, data: ContextType) =
+        visitHirExpression(hirSetProperty, data)
 }

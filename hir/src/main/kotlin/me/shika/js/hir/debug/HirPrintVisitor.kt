@@ -10,6 +10,7 @@ import me.shika.js.hir.elements.HirGetProperty
 import me.shika.js.hir.elements.HirGetValue
 import me.shika.js.hir.elements.HirObjectExpression
 import me.shika.js.hir.elements.HirParameter
+import me.shika.js.hir.elements.HirSetProperty
 import me.shika.js.hir.elements.HirSetValue
 import me.shika.js.hir.elements.HirVariable
 import me.shika.js.hir.elements.HirVisitor
@@ -100,9 +101,9 @@ class HirPrintVisitor : HirVisitor<StringBuilder, Unit> {
             withIndent {
                 hirSetValue.receiver.accept(this, data)
             }
-            data.indentedLine("ARGUMENTS:")
+            data.indentedLine("VALUE:")
             withIndent {
-                hirSetValue.argument.accept(this, data)
+                hirSetValue.value.accept(this, data)
             }
         }
     }
@@ -114,6 +115,21 @@ class HirPrintVisitor : HirVisitor<StringBuilder, Unit> {
             data.indentedLine("RECEIVER:")
             withIndent {
                 hirGetProperty.receiver.accept(this, data)
+            }
+        }
+    }
+
+    override fun visitHirSetProperty(hirSetProperty: HirSetProperty, data: StringBuilder) {
+        data.indentedLine("SET_PROP: ${hirSetProperty.property}")
+
+        withIndent {
+            data.indentedLine("RECEIVER:")
+            withIndent {
+                hirSetProperty.receiver.accept(this, data)
+            }
+            data.indentedLine("VALUE:")
+            withIndent {
+                hirSetProperty.value.accept(this, data)
             }
         }
     }

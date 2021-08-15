@@ -38,6 +38,7 @@ import me.shika.js.hir.elements.HirGetProperty
 import me.shika.js.hir.elements.HirGetValue
 import me.shika.js.hir.elements.HirObjectExpression
 import me.shika.js.hir.elements.HirParameter
+import me.shika.js.hir.elements.HirSetProperty
 import me.shika.js.hir.elements.HirSetValue
 import me.shika.js.hir.elements.HirVariable
 import me.shika.js.lexer.JsToken
@@ -218,7 +219,7 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
         return HirObjectExpression(entries, astNode.sourceOffset)
     }
 
-    private fun convertSetValue(astNode: LighterASTNode): HirSetValue {
+    private fun convertSetValue(astNode: LighterASTNode): HirExpression {
         val children = astNode.getChildren().filter { it?.tokenType == EXPRESSION }
         require(children.size == 2) { "requires 2 expressions for assignment" }
 
@@ -227,7 +228,17 @@ class AST2HirConverter(private val tree: ASTTree, private val errorReporter: Hir
             require (expression != null) { "Failed to convert expression $it" }
             expression
         }
-        return HirSetValue(receiver, value, astNode.sourceOffset)
+
+        return if (receiver is HirGetProperty) {
+            HirSetProperty(
+                receiver = receiver.receiver,
+                property = receiver.property,
+                value = value,
+                source = astNode.sourceOffset
+            )
+        } else {
+            HirSetValue(receiver, value, astNode.sourceOffset)
+        }
     }
 
     private fun convertGetProperty(astNode: LighterASTNode): HirGetProperty {

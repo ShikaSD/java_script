@@ -64,16 +64,43 @@ class HirConverterTest {
                           KEY: nestedKey
                           VALUE:
                             CONST: Str(value=nestedValue)
-                  SET: <unresolved test>
-                    SET: <unresolved hello>
-                      GET: <unresolved test>
-                  CALL: <unresolved print>
-                    GET: <unresolved hello>
-              CALL: <unresolved name>
-                CONST: Number(value=0.6)
-                CONST: Str(value=)
-                CONST: Str(value=)
-                CONST: Str(value=)
+                  SET_PROP: nestedKey 
+                    RECEIVER:
+                      GET_PROP: secondKey
+                        RECEIVER:
+                          GET: <unresolved test>
+                    VALUE:
+                      OBJECT:
+                  CALL:
+                    RECEIVER:
+                      GET_PROP: nestedKey
+                        RECEIVER:
+                          GET_PROP: secondKey
+                            RECEIVER:
+                              GET: <unresolved test>
+                    ARGUMENTS:
+                  SET:
+                    RECEIVER:
+                      SET:
+                        RECEIVER:
+                          GET: <unresolved hello>
+                        VALUE:
+                          GET: <unresolved test>
+                    VALUE:
+                      CONST: Str(value=result)
+                  CALL:
+                    RECEIVER:
+                      GET: <unresolved print>
+                    ARGUMENTS:
+                      GET: <unresolved hello>
+              CALL:
+                RECEIVER:
+                  GET: <unresolved name>
+                ARGUMENTS:
+                  CONST: Number(value=0.6)
+                  CONST: Str(value=)
+                  CONST: Str(value=)
+                  CONST: Str(value=)
         """.trimIndent(),
             hirFile.dump().trimEnd()
         )
@@ -91,7 +118,7 @@ class HirConverterTest {
 
         assertEquals("""
             FILE name: Test.js
-              FUNCTION name: name
+              FUNCTION name:name
                 PARAMETER name: param1
                 PARAMETER name: param2
                 BODY
@@ -108,16 +135,43 @@ class HirConverterTest {
                           KEY: nestedKey
                           VALUE:
                             CONST: Str(value=nestedValue)
-                  SET: variable test
-                    SET: variable hello
-                      GET: variable test
-                  CALL: function print
-                    GET: variable hello
-              CALL: function name
-                CONST: Number(value=0.6)
-                CONST: Str(value=)
-                CONST: Str(value=)
-                CONST: Str(value=)
+                  SET_PROP: nestedKey 
+                    RECEIVER:
+                      GET_PROP: secondKey
+                        RECEIVER:
+                          GET: variable test
+                    VALUE:
+                      OBJECT:
+                  CALL:
+                    RECEIVER:
+                      GET_PROP: nestedKey
+                        RECEIVER:
+                          GET_PROP: secondKey
+                            RECEIVER:
+                              GET: variable test
+                    ARGUMENTS:
+                  SET:
+                    RECEIVER:
+                      SET:
+                        RECEIVER:
+                          GET: variable hello
+                        VALUE:
+                          GET: variable test
+                    VALUE:
+                      CONST: Str(value=result)
+                  CALL:
+                    RECEIVER:
+                      GET: function print
+                    ARGUMENTS:
+                      GET: variable hello
+              CALL:
+                RECEIVER:
+                  GET: function name
+                ARGUMENTS:
+                  CONST: Number(value=0.6)
+                  CONST: Str(value=)
+                  CONST: Str(value=)
+                  CONST: Str(value=) 
         """.trimIndent(),
             hirFile.dump().trimEnd()
         )

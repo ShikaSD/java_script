@@ -66,12 +66,23 @@ class MirConverterTest {
                           KEY: nestedKey
                           VALUE:
                             CONST: Str(value=nestedValue)
-                  SET: variable test
-                    SET: variable hello
+                  SET:
+                    GET_PROP: key2 
                       GET: variable test
-                  CALL: function print
+                    OBJECT:
+                  CALL:
+                    GET_PROP: func
+                      GET: variable test
+                  SET:
+                    SET:
+                      GET: variable hello
+                      GET: variable test
+                    CONST: Str(value=result)
+                  CALL:
+                    GET: function print
                     GET: variable hello
-              CALL: function name
+              CALL:
+                GET: function name
                 CONST: Number(value=0.6)
                 CONST: Str(value=)
                 CONST: Str(value=)

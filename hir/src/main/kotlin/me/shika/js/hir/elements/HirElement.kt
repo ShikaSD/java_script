@@ -120,7 +120,7 @@ class HirObjectExpression(val entries: Map<String, HirExpression>, override val 
 
 class HirSetValue(
     val receiver: HirExpression,
-    val argument: HirExpression,
+    val value: HirExpression,
     override val source: SourceOffset = NO_SOURCE
 ) : HirExpression {
     override fun <Context, Data> accept(visitor: HirVisitor<Context, Data>, data: Context) =
@@ -128,7 +128,22 @@ class HirSetValue(
 
     override fun <Context, Data> acceptChildren(visitor: HirVisitor<Context, Data>, data: Context) {
         receiver.accept(visitor, data)
-        argument.accept(visitor, data)
+        value.accept(visitor, data)
+    }
+}
+
+class HirSetProperty(
+    val receiver: HirExpression,
+    val property: String,
+    val value: HirExpression,
+    override val source: SourceOffset = NO_SOURCE
+) : HirExpression {
+    override fun <Context, Data> accept(visitor: HirVisitor<Context, Data>, data: Context) =
+        visitor.visitHirSetProperty(this, data)
+
+    override fun <Context, Data> acceptChildren(visitor: HirVisitor<Context, Data>, data: Context) {
+        receiver.accept(visitor, data)
+        value.accept(visitor, data)
     }
 }
 

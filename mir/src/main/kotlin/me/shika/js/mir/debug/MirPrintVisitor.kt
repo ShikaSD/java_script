@@ -6,9 +6,11 @@ import me.shika.js.mir.elements.MirConst
 import me.shika.js.mir.elements.MirElement
 import me.shika.js.mir.elements.MirFile
 import me.shika.js.mir.elements.MirFunction
+import me.shika.js.mir.elements.MirGetProperty
 import me.shika.js.mir.elements.MirGetValue
 import me.shika.js.mir.elements.MirObjectExpression
 import me.shika.js.mir.elements.MirParameter
+import me.shika.js.mir.elements.MirSetProperty
 import me.shika.js.mir.elements.MirSetValue
 import me.shika.js.mir.elements.MirSymbol
 import me.shika.js.mir.elements.MirVariable
@@ -62,7 +64,7 @@ class MirPrintVisitor : MirVisitor<StringBuilder> {
     }
 
     override fun visitMirCall(call: MirCall, data: StringBuilder) {
-        data.indentedLine("CALL: ${call.symbol.dump()}")
+        data.indentedLine("CALL:")
 
         withIndent {
             super.visitMirCall(call, data)
@@ -86,10 +88,26 @@ class MirPrintVisitor : MirVisitor<StringBuilder> {
     }
 
     override fun visitMirSetValue(setValue: MirSetValue, data: StringBuilder) {
-        data.indentedLine("SET: ${setValue.symbol.dump()}")
+        data.indentedLine("SET:")
 
         withIndent {
             super.visitMirSetValue(setValue, data)
+        }
+    }
+
+    override fun visitMirGetProperty(getProperty: MirGetProperty, data: StringBuilder) {
+        data.indentedLine("GET_PROP: ${getProperty.name}")
+
+        withIndent {
+            super.visitMirGetProperty(getProperty, data)
+        }
+    }
+
+    override fun visitMirSetProperty(setProperty: MirSetProperty, data: StringBuilder) {
+        data.indentedLine("SET_PROP: ${setProperty.name}")
+
+        withIndent {
+            super.visitMirSetProperty(setProperty, data)
         }
     }
 

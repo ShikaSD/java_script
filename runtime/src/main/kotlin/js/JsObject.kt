@@ -1,6 +1,6 @@
 package js
 
-class JsObject {
+open class JsObject {
     private val storage = mutableMapOf<String, Any?>()
 
     fun add(key: String, value: Any?) {

@@ -8,9 +8,11 @@ import me.shika.js.hir.elements.HirElement
 import me.shika.js.hir.elements.HirExpression
 import me.shika.js.hir.elements.HirFile
 import me.shika.js.hir.elements.HirFunction
+import me.shika.js.hir.elements.HirGetProperty
 import me.shika.js.hir.elements.HirGetValue
 import me.shika.js.hir.elements.HirObjectExpression
 import me.shika.js.hir.elements.HirParameter
+import me.shika.js.hir.elements.HirSetProperty
 import me.shika.js.hir.elements.HirSetValue
 import me.shika.js.hir.elements.HirVariable
 import me.shika.js.hir.elements.HirVisitor
@@ -23,10 +25,11 @@ import me.shika.js.mir.elements.MirElementWithParent
 import me.shika.js.mir.elements.MirExpression
 import me.shika.js.mir.elements.MirFile
 import me.shika.js.mir.elements.MirFunction
-import me.shika.js.mir.elements.MirFunctionSymbol
+import me.shika.js.mir.elements.MirGetProperty
 import me.shika.js.mir.elements.MirGetValue
 import me.shika.js.mir.elements.MirObjectExpression
 import me.shika.js.mir.elements.MirParameter
+import me.shika.js.mir.elements.MirSetProperty
 import me.shika.js.mir.elements.MirSetValue
 import me.shika.js.mir.elements.MirVariable
 import me.shika.js.mir.elements.MirVisitor
@@ -99,7 +102,7 @@ class Hir2MirConverter {
 
         override fun visitHirCall(hirCall: HirCall, data: Nothing?): MirCall =
             MirCall(
-                symbol = symbolTable.referenceSymbol(hirCall.candidate!!) as MirFunctionSymbol, // TODO
+                receiver = hirCall.receiver.accept(this, null) as MirExpression, // TODO
                 arguments = hirCall.arguments.map { arg ->
                     arg?.let { it.accept(this, null) as MirExpression }
                 },
@@ -112,17 +115,32 @@ class Hir2MirConverter {
                 source = hirGetValue.source
             )
 
+        override fun visitHirSetProperty(hirSetProperty: HirSetProperty, data: Nothing?): MirSetProperty =
+            MirSetProperty(
+                receiver = hirSetProperty.receiver.mir(),
+                name = hirSetProperty.property,
+                value = hirSetProperty.value.mir(),
+                source = hirSetProperty.source
+            )
+
+        override fun visitHirGetProperty(hirGetProperty: HirGetProperty, data: Nothing?): MirGetProperty =
+            MirGetProperty(
+                receiver = hirGetProperty.receiver.mir(),
+                name = hirGetProperty.property,
+                source = hirGetProperty.source
+            )
+
         override fun visitHirSetValue(hirSetValue: HirSetValue, data: Nothing?): MirSetValue =
             MirSetValue(
-                symbol = symbolTable.referenceSymbol(hirSetValue.candidate!!),
-                value = hirSetValue.argument.accept(this, null) as MirExpression,
+                receiver = hirSetValue.receiver.mir(),
+                value = hirSetValue.value.mir(),
                 source = hirSetValue.source
             )
 
         override fun visitHirObjectExpression(hirObjectExpression: HirObjectExpression, data: Nothing?): MirObjectExpression =
             MirObjectExpression(
                 entries = hirObjectExpression.entries.mapValues {
-                    it.value.accept(this, null) as MirExpression
+                    it.value.mir()
                 },
                 source = hirObjectExpression.source
             )
@@ -132,6 +150,9 @@ class Hir2MirConverter {
                 value = hirConst.value,
                 source = hirConst.source
             )
+
+        private fun HirExpression.mir(): MirExpression =
+            accept(this@Hir2MirVisitor, null) as MirExpression
     }
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")

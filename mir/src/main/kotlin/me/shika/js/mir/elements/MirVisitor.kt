@@ -30,6 +30,12 @@ interface MirVisitor<Context> {
     fun visitMirSetValue(setValue: MirSetValue, data: Context) =
         visitMirExpression(setValue, data)
 
+    fun visitMirGetProperty(getProperty: MirGetProperty, data: Context) =
+        visitMirExpression(getProperty, data)
+
+    fun visitMirSetProperty(setProperty: MirSetProperty, data: Context) =
+        visitMirExpression(setProperty, data)
+
     fun visitMirObjectExpression(objectExpression: MirObjectExpression, data: Context) =
         visitMirExpression(objectExpression, data)
 
