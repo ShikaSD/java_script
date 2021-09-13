@@ -3,7 +3,7 @@ package js
 open class JsObject {
     private val storage = mutableMapOf<String, Any?>()
 
-    fun add(key: String, value: Any?) {
+    fun put(key: String, value: Any?) {
         storage[key] = value
     }
 

@@ -1,6 +1,7 @@
 package me.shika.js.mir
 
 import me.shika.js.hir.builtins.BuiltIns
+import me.shika.js.hir.debug.dump
 import me.shika.js.hir.elements.HirBody
 import me.shika.js.hir.elements.HirCall
 import me.shika.js.hir.elements.HirConst
@@ -21,32 +22,34 @@ import me.shika.js.mir.elements.MirBody
 import me.shika.js.mir.elements.MirCall
 import me.shika.js.mir.elements.MirConst
 import me.shika.js.mir.elements.MirElement
-import me.shika.js.mir.elements.MirElementWithParent
 import me.shika.js.mir.elements.MirExpression
 import me.shika.js.mir.elements.MirFile
 import me.shika.js.mir.elements.MirFunction
+import me.shika.js.mir.elements.MirFunctionSymbol
 import me.shika.js.mir.elements.MirGetProperty
 import me.shika.js.mir.elements.MirGetValue
 import me.shika.js.mir.elements.MirObjectExpression
 import me.shika.js.mir.elements.MirParameter
+import me.shika.js.mir.elements.MirParameterSymbol
 import me.shika.js.mir.elements.MirSetProperty
 import me.shika.js.mir.elements.MirSetValue
+import me.shika.js.mir.elements.MirSymbol
 import me.shika.js.mir.elements.MirVariable
-import me.shika.js.mir.elements.MirVisitor
+import me.shika.js.mir.elements.MirVariableSymbol
+import me.shika.js.mir.util.patchParents
 
 class Hir2MirConverter {
-    private val symbolTable = MirSymbolTable()
+    private val symbolTable = Hir2MirSymbolTable()
     private val visitor = Hir2MirVisitor()
-    private val parentsPatch = PatchMirParents()
 
     init {
         val function = visitor.visitHirFunction(BuiltIns.Print, null)
-        parentsPatch.visitMirFunction(function, BuiltInsFile)
+        function.patchParents(BuiltInsFile)
     }
 
     fun convertFile(hirFile: HirFile): MirFile =
         visitor.visitHirFile(hirFile, null).also {
-            parentsPatch.visitMirFile(it, it)
+            it.patchParents(null)
         }
 
     private inner class Hir2MirVisitor : HirVisitor<Nothing?, MirElement?> {
@@ -155,15 +158,21 @@ class Hir2MirConverter {
             accept(this@Hir2MirVisitor, null) as MirExpression
     }
 
-    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
-    private class PatchMirParents : MirVisitor<MirElement?> {
-        override fun visitMirElement(element: MirElement, parent: MirElement?) {
-            if (element is MirElementWithParent) {
-                element.parent = parent
-                element.acceptChildren(this, element)
-            } else {
-                element.acceptChildren(this, parent)
+    class Hir2MirSymbolTable {
+        private val symbols = hashMapOf<HirElement, MirSymbol<*>>()
+
+        fun declareFunctionSymbol(function: HirFunction): MirFunctionSymbol =
+            symbols.getOrPut(function) { MirFunctionSymbol() } as MirFunctionSymbol
+
+        fun declareParameterSymbol(parameter: HirParameter): MirParameterSymbol =
+            symbols.getOrPut(parameter) { MirParameterSymbol() } as MirParameterSymbol
+
+        fun declareVariableSymbol(variable: HirVariable): MirVariableSymbol =
+            symbols.getOrPut(variable) { MirVariableSymbol() } as MirVariableSymbol
+
+        fun referenceSymbol(element: HirElement): MirSymbol<*> =
+            symbols.getOrElse(element) {
+                throw IllegalStateException("Symbol not defined: ${element.dump()}")
             }
-        }
     }
 }

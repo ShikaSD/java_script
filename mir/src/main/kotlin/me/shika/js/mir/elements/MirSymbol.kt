@@ -24,3 +24,4 @@ abstract class MirBindableSymbol<Element : MirElement> : MirSymbol<Element> {
 class MirFunctionSymbol : MirBindableSymbol<MirFunction>()
 class MirParameterSymbol : MirBindableSymbol<MirParameter>()
 class MirVariableSymbol : MirBindableSymbol<MirVariable>()
+class MirClassSymbol : MirBindableSymbol<MirClass>()

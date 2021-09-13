@@ -1,7 +1,7 @@
 package me.shika.js.mir.elements
 
-interface MirVisitor<Context> {
-    fun visitMirElement(element: MirElement, data: Context)
+interface MirVisitor<Context, Result> {
+    fun visitMirElement(element: MirElement, data: Context): Result
 
     fun visitMirFile(file: MirFile, data: Context) =
         visitMirElement(file, data)
@@ -17,6 +17,9 @@ interface MirVisitor<Context> {
 
     fun visitMirVariable(variable: MirVariable, data: Context) =
         visitMirElement(variable, data)
+
+    fun visitMirClass(cls: MirClass, data: Context) =
+        visitMirElement(cls, data)
 
     fun visitMirExpression(expression: MirExpression, data: Context) =
         visitMirElement(expression, data)
@@ -41,4 +44,7 @@ interface MirVisitor<Context> {
 
     fun visitMirCall(call: MirCall, data: Context) =
         visitMirExpression(call, data)
+
+    fun visitMirNewInstance(newInstance: MirNewInstance, data: Context) =
+        visitMirExpression(newInstance, data)
 }

@@ -11,6 +11,7 @@ import me.shika.js.hir.resolve.HirReferenceResolver
 import me.shika.js.hir.resolve.RootScope
 import me.shika.js.mir.Hir2MirConverter
 import me.shika.js.mir.debug.dump
+import me.shika.js.mir.lowerings.Lowerings
 import me.shika.js.parser.JsParser
 import me.shika.js.parser.JsParserDefinition
 import org.junit.Assert.assertEquals
@@ -72,18 +73,78 @@ class MirConverterTest {
                   CALL:
                     GET_PROP: func
                       GET: variable test
+                    ARGS:
                   SET: variable hello
                     SET: variable test
                       CONST: Str(value=result)
                   CALL:
                     GET: function print
-                    GET: variable hello
+                    ARGS:
+                      GET: variable hello
               CALL:
                 GET: function name
-                CONST: Number(value=0.6)
-                CONST: Str(value=)
-                CONST: Str(value=)
-                CONST: Str(value=)
+                ARGS:
+                  CONST: Number(value=0.6)
+                  CONST: Str(value=)
+                  CONST: Str(value=)
+                  CONST: Str(value=)
+        """.trimIndent(),
+            mirFile.dump().trimEnd()
+        )
+    }
+
+    @Test
+    fun testMirLowerings() {
+        val hirFile = getTestHir()
+        val mirFile = Hir2MirConverter().convertFile(hirFile)
+        Lowerings.forEach {
+            mirFile.accept(it, null)
+        }
+
+        assertEquals("""
+            FILE name: Test.js
+              CLASS name: Test_js
+                VAR name: name
+                  NEW symbol: class name
+                CALL:
+                  GET: variable name
+                  ARGS:
+                    CONST: Number(value=0.6)
+                    CONST: Str(value=)
+                    CONST: Str(value=)
+                    CONST: Str(value=)
+              CLASS name: name
+                FUNCTION name: invoke
+                  PARAMETER name: param1
+                  PARAMETER name: param2
+                  BODY
+                    VAR name: hello
+                      CONST: Str(value=value)
+                    VAR name: test
+                      OBJECT:
+                        KEY: key
+                        VALUE:
+                          GET: variable hello
+                        KEY: secondKey
+                        VALUE:
+                          OBJECT:
+                            KEY: nestedKey
+                            VALUE:
+                              CONST: Str(value=nestedValue)
+                    SET_PROP: key2 
+                      GET: variable test
+                      OBJECT:
+                    CALL:
+                      GET_PROP: func
+                        GET: variable test
+                      ARGS:
+                    SET: variable hello
+                      SET: variable test
+                        CONST: Str(value=result)
+                    CALL:
+                      GET: function print
+                      ARGS:
+                        GET: variable hello
         """.trimIndent(),
             mirFile.dump().trimEnd()
         )

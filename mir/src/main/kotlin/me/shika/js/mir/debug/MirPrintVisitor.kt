@@ -2,12 +2,14 @@ package me.shika.js.mir.debug
 
 import me.shika.js.mir.elements.MirBody
 import me.shika.js.mir.elements.MirCall
+import me.shika.js.mir.elements.MirClass
 import me.shika.js.mir.elements.MirConst
 import me.shika.js.mir.elements.MirElement
 import me.shika.js.mir.elements.MirFile
 import me.shika.js.mir.elements.MirFunction
 import me.shika.js.mir.elements.MirGetProperty
 import me.shika.js.mir.elements.MirGetValue
+import me.shika.js.mir.elements.MirNewInstance
 import me.shika.js.mir.elements.MirObjectExpression
 import me.shika.js.mir.elements.MirParameter
 import me.shika.js.mir.elements.MirSetProperty
@@ -16,7 +18,7 @@ import me.shika.js.mir.elements.MirSymbol
 import me.shika.js.mir.elements.MirVariable
 import me.shika.js.mir.elements.MirVisitor
 
-class MirPrintVisitor : MirVisitor<StringBuilder> {
+object MirPrintVisitor : MirVisitor<StringBuilder, Unit> {
     private var indentation = 0
 
     override fun visitMirElement(element: MirElement, data: StringBuilder) {
@@ -63,11 +65,31 @@ class MirPrintVisitor : MirVisitor<StringBuilder> {
         }
     }
 
+    override fun visitMirClass(cls: MirClass, data: StringBuilder) {
+        data.indentedLine("CLASS name: ${cls.name}")
+
+        withIndent {
+            super.visitMirClass(cls, data)
+        }
+    }
+
     override fun visitMirCall(call: MirCall, data: StringBuilder) {
         data.indentedLine("CALL:")
 
         withIndent {
-            super.visitMirCall(call, data)
+            call.receiver.accept(this, data)
+            data.indentedLine("ARGS:")
+            withIndent {
+                call.arguments.forEach { it?.accept(this, data) }
+            }
+        }
+    }
+
+    override fun visitMirNewInstance(newInstance: MirNewInstance, data: StringBuilder) {
+        data.indentedLine("NEW symbol: ${newInstance.classSymbol.dump()}")
+
+        withIndent {
+            super.visitMirNewInstance(newInstance, data)
         }
     }
 
@@ -148,6 +170,7 @@ class MirPrintVisitor : MirVisitor<StringBuilder> {
             is MirFunction -> "function ${owner.name}"
             is MirVariable -> "variable ${owner.name}"
             is MirParameter -> "parameter ${owner.name}"
+            is MirClass -> "class ${owner.name}"
             else -> toString()
         }
     }
@@ -155,5 +178,5 @@ class MirPrintVisitor : MirVisitor<StringBuilder> {
 
 fun MirElement.dump(): String =
     buildString {
-        accept(MirPrintVisitor(), this)
+        accept(MirPrintVisitor, this)
     }
