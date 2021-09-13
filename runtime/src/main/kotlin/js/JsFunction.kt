@@ -1,3 +1,5 @@
 package js
 
-abstract class JsFunction : JsObject()
+interface JsFunction {
+    fun invoke(args: Array<Any>)
+}

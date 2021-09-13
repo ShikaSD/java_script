@@ -34,7 +34,7 @@ object MirPrintVisitor : MirVisitor<StringBuilder, Unit> {
     }
 
     override fun visitMirFunction(function: MirFunction, data: StringBuilder) {
-        data.indentedLine("FUNCTION name: ${function.name}")
+        data.indentedLine("FUNCTION name: ${function.name} isNative: ${function.isNative} isStatic: ${function.isStatic} origin: ${function.origin}")
 
         withIndent {
             super.visitMirFunction(function, data)
@@ -66,7 +66,7 @@ object MirPrintVisitor : MirVisitor<StringBuilder, Unit> {
     }
 
     override fun visitMirClass(cls: MirClass, data: StringBuilder) {
-        data.indentedLine("CLASS name: ${cls.name}")
+        data.indentedLine("CLASS name: ${cls.name} origin: ${cls.origin}")
 
         withIndent {
             super.visitMirClass(cls, data)

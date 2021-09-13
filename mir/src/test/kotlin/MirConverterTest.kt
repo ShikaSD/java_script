@@ -104,15 +104,17 @@ class MirConverterTest {
         assertEquals("""
             FILE name: Test.js
               CLASS name: Test_js
-                VAR name: name
-                  NEW symbol: class name
-                CALL:
-                  GET: variable name
-                  ARGS:
-                    CONST: Number(value=0.6)
-                    CONST: Str(value=)
-                    CONST: Str(value=)
-                    CONST: Str(value=)
+                FUNCTION name: <clinit>
+                  BODY
+                    VAR name: name
+                      NEW symbol: class name
+                    CALL:
+                      GET: variable name
+                      ARGS:
+                        CONST: Number(value=0.6)
+                        CONST: Str(value=)
+                        CONST: Str(value=)
+                        CONST: Str(value=)
               CLASS name: name
                 FUNCTION name: invoke
                   PARAMETER name: param1

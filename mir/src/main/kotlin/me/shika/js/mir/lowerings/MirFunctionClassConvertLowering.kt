@@ -14,6 +14,7 @@ import me.shika.js.mir.elements.MirSymbol
 import me.shika.js.mir.elements.MirTransformer
 import me.shika.js.mir.elements.MirVariable
 import me.shika.js.mir.elements.MirVariableSymbol
+import me.shika.js.mir.origin.JsFunctionOrigin
 
 class MirFunctionClassConvertLowering : MirTransformer<Nothing?> {
     // todo convert to scope
@@ -53,10 +54,11 @@ class MirFunctionClassConvertLowering : MirTransformer<Nothing?> {
                     name = "invoke",
                     parameters = function.parameters,
                     body = function.body,
-                    isNative = true,
+                    origin = JsFunctionOrigin,
                     source = function.source
                 )
-            )
+            ),
+            origin = JsFunctionOrigin
         )
         functionClass.parent = classParent
 

@@ -2,6 +2,7 @@ package me.shika.js.mir.elements
 
 import me.shika.js.ConstValue
 import me.shika.js.SourceOffset
+import me.shika.js.mir.origin.Origin
 
 interface MirElement {
     val source: SourceOffset
@@ -35,6 +36,8 @@ class MirFunction(
     var parameters: List<MirParameter>,
     var body: MirBody,
     var isNative: Boolean = false,
+    var isStatic: Boolean = false,
+    val origin: Origin? = null,
     override val source: SourceOffset = SourceOffset.NO_SOURCE
 ) : MirElementWithParent, MirSymbolOwner<MirFunction> {
     init {
@@ -104,6 +107,7 @@ class MirClass(
     override val symbol: MirClassSymbol,
     val name: String,
     var statements: List<MirElement>,
+    val origin: Origin? = null,
     override val source: SourceOffset = SourceOffset.NO_SOURCE
 ) : MirElementWithParent, MirSymbolOwner<MirClass> {
     init {

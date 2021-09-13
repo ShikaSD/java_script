@@ -19,10 +19,11 @@ class MirFileClassWrapLowering : MirVisitor<Nothing?, Unit> {
 
     private fun MirFile.wrapWithClass(): MirClass =
         MirClass(
-            MirClassSymbol(),
-            className(),
-            statements,
-            source
+            symbol = MirClassSymbol(),
+            name = className(),
+            statements = statements,
+            origin = null,
+            source = source
         ).also {
             it.parent = this
         }
